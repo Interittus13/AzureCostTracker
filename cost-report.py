@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from email import header
 import os
 import tempfile
@@ -15,10 +16,10 @@ TENANT_ID             = os.getenv("TENANT_ID")
 CLIENT_ID             = os.getenv("CLIENT_ID")
 CLIENT_SECRET         = os.getenv("CLIENT_SECRET")
 
-subscription_ids = [
-    os.getenv("SUBSCRIPTION_ID1"),
-    # os.getenv("SUBSCRIPTION_ID2")
-]
+subscription_ids = {
+    # os.getenv("SUBSCRIPTION_ID1") : {"billing_start": 1},
+    os.getenv("SUBSCRIPTION_ID2") : {"billing_start": 15}
+}
 
 # Azure API Endpoints
 AUTH_URL = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/token"
@@ -95,7 +96,7 @@ def calculate_cost(cost_data):
     total_cost = sum(item[0] for item in cost_data.get("properties", {}).get("rows", []) if isinstance(item[0], (int, float)))
     return round(total_cost, 2)
 
-def generate_html_report(daily_cost_date, daily_cost_data, first_day_of_month, last_day_of_month, monthly_forecast, subscription_name):
+def generate_html_report(daily_date, daily_cost_data, first_day_of_month, last_day_of_month, monthly_forecast, subscription_name):
     # today = datetime.now(timezone.utc)
     daily_table, daily_total = print_cost_breakdown(daily_cost_data)
     html = f"""
@@ -110,7 +111,7 @@ def generate_html_report(daily_cost_date, daily_cost_data, first_day_of_month, l
     </head>
     <body>
     <h2>🔹 {subscription_name} - Cost Report</h2>
-    <h3>📅 Daily Cost Report ({format_date(daily_cost_date)})</h3>
+    <h3>📅 Daily Cost Report ({format_date(daily_date)})</h3>
     <table>
         <tr>
             <th>Service Name</th>
@@ -121,7 +122,7 @@ def generate_html_report(daily_cost_date, daily_cost_data, first_day_of_month, l
     </table>
     
     <h3>📊 Forecasted Monthly Cost</h3>
-    <p><strong>Estimated Forecast for ({first_day_of_month.strftime('%B')} {first_day_of_month.day} - {last_day_of_month.day}):</strong> ${monthly_forecast:.2f}</p>
+    <p><strong>Estimated Forecast for ({first_day_of_month.strftime('%B')} {first_day_of_month.day} to {last_day_of_month.strftime('%B')} {last_day_of_month.day}):</strong> ${monthly_forecast:.2f}</p>
     </body>
     </html>
     """
@@ -135,33 +136,45 @@ def preview_email(html):
 
     webbrowser.open(f"file://{temp_file_path}")
 
+def get_forecast_date(start_date):
+    today = datetime.now(timezone.utc)
+    if today.day >= start_date:
+        first_day = today.replace(day=start_date)
+        last_day = (first_day + timedelta(days=32)).replace(day=start_date) - timedelta(days=1)
+        return first_day, last_day
+    else:
+        first_day = (today.replace(day=start_date) - timedelta(days=32)).replace(day=start_date)
+        last_day = today.replace(day=start_date) - timedelta(days=1)
+        return first_day, last_day
+
 def main():
     try:
+        token = get_access_token()
         today = datetime.now(timezone.utc)
-        daily_cost_date = (today - timedelta(days=2))
-        first_day_of_month = today.replace(day=1)
-        last_day_of_month = (first_day_of_month + timedelta(days=32)).replace(day=1) - timedelta(days=1)
 
-        for subscription_id in subscription_ids:
-            token = get_access_token()
+        for subscription_id, details in subscription_ids.items():
             subscription_name = get_subscription_name(subscription_id, token)
 
+            daily_date = (today - timedelta(days=2))
             # Fetching Daily cost (Today - 2)
-            daily_cost_data = get_cost_data(token, daily_cost_date, daily_cost_date, subscription_id)
+            daily_cost_data = get_cost_data(token, daily_date, daily_date, subscription_id)
+
+            billing_from = details["billing_start"]
+            first_day, last_day = get_forecast_date(billing_from)
 
             # Fetch Monthly Forecast
-            forecast_month_data = get_cost_data(token, first_day_of_month, last_day_of_month, subscription_id, "forecast", "Usage")
+            forecast_month_data = get_cost_data(token, first_day, last_day, subscription_id, "forecast", "Usage")
             forecast_month_cost = calculate_cost(forecast_month_data)
 
-            actual_month_data = get_cost_data(token, first_day_of_month, last_day_of_month, subscription_id)
+            actual_month_data = get_cost_data(token, first_day, last_day, subscription_id)
             actual_month_cost = calculate_cost(actual_month_data)
 
             monthly_forecast = forecast_month_cost + actual_month_cost
             print(f"🔹 Forecasted Cost for {subscription_name} (Feb):")
-            print(f"   ✅ Total Forecast for {today.strftime('%B')} {first_day_of_month.day} To {last_day_of_month.day}: ${monthly_forecast:.2f}\n")
+            print(f"   ✅ Total Forecast for {first_day.strftime('%B')} {first_day.day} To {last_day.strftime('%B')} {last_day.day}: ${monthly_forecast:.2f}\n")
 
             # Generate Email content
-            email_html = generate_html_report(daily_cost_date, daily_cost_data, first_day_of_month, last_day_of_month, monthly_forecast, subscription_name)
+            email_html = generate_html_report(daily_date, daily_cost_data, first_day, last_day, monthly_forecast, subscription_name)
             preview_email(email_html)
 
     except Exception as e:
