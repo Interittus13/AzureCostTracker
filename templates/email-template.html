@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #4CAF50; color: white; }
+        </style>
+    </head>
+    <body>
+    <h2>🔹 {{subscription_name}} - Cost Report</h2>
+    <h3>📅 Daily Cost Report ({{daily_date}})</h3>
+    <table>
+        <tr>
+            <th>Service Name</th>
+            <th>Cost (CAD)</th>
+        </tr>
+        {{daily_table}}
+    <tr><td><strong>Total Daily Cost</strong></td><td><strong>{{daily_total}}</strong></td></tr>
+    </table>
+    
+    <h3>📊 Forecasted Monthly Cost</h3>
+    <p><strong>Estimated Forecast for ({{first_day_of_month.month}} {{first_day_of_month.day}} to {{last_day_of_month.month}} {{last_day_of_month.day}}):</strong> {{monthly_forecast}}</p>
+    </body>
+</html>
