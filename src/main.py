@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+from src.services.notifications import send_notification
 from src.config import SUBSCRIPTIONS
 from src.services.utils import get_forecast_date, calculate_cost
 from src.services.azure_auth import get_access_token
@@ -35,6 +36,8 @@ def main():
             # Generate Email content
             email_html = render_html_report(daily_date, daily_cost_data, first_day, last_day, monthly_forecast, subscription_name)
             preview_email(email_html)
+
+            send_notification("Cost Report", email_html)
 
     except Exception as e:
         print(f"Error: {e}")
