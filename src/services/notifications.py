@@ -1,7 +1,8 @@
 from email.mime.text import MIMEText
 import smtplib
 import requests
-from src.config import NOTIFY_METHOD, WEBHOOK_URL, SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_FROM, EMAIL_TO
+from src.config import NOTIFY_METHOD, WEBHOOK_URL, SMTP_SERVER, SMTP_PORT, SMTP_PASS, EMAIL_FROM, EMAIL_TO
+from src.utils.logger import logger
 
 
 def send_webhook_notification(message):
@@ -12,9 +13,9 @@ def send_webhook_notification(message):
     response = requests.post(WEBHOOK_URL, json=payload)
 
     if response.status_code == 200:
-        print("Weebhook sent successfully")
+        logger.info("Weebhook sent successfully")
     else:
-        print(f"Failed to send weebhook. Status code: ${response.status_code}")
+        logger.error(f"Failed to send weebhook. Status code: ${response.status_code}")
 
 
 def send_email_notification(subject, html_content):
@@ -29,17 +30,19 @@ def send_email_notification(subject, html_content):
             server.starttls()
             server.login(EMAIL_FROM, SMTP_PASS)
             server.sendmail(EMAIL_FROM, recipients, msg.as_string())
-        print("Email sent successfully")
+        logger.info("Email sent successfully")
     except Exception as e:
-        print(f"Failed to send email. Error: {e}")
+        logger.error(f"Failed to send email. Error: {e}")
 
 def send_notification(subject, html_report):
-    if NOTIFY_METHOD == "email":
-        send_email_notification(subject, html_report)
-    elif NOTIFY_METHOD == "webhook":
-        send_webhook_notification(html_report)
-    elif NOTIFY_METHOD == "both":
-        send_email_notification(subject, html_report)
-        send_webhook_notification(html_report)
-    else:
-        print("Invalid notification method")
+    match NOTIFY_METHOD:
+        case "email":
+            send_email_notification(subject, html_report)
+        case "webhook":
+            send_webhook_notification(html_report)
+        case "both":
+            send_email_notification(subject, html_report)
+            send_webhook_notification(html_report)
+        case _:
+            logger.error("Invalid Notify method")
+

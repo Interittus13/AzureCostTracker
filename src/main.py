@@ -1,11 +1,13 @@
 from datetime import datetime, timezone, timedelta
 from src.services.notifications import send_notification
 from src.config import SUBSCRIPTIONS
-from src.services.utils import get_forecast_date, calculate_cost
+from src.utils.utils import format_currency, get_forecast_date, calculate_cost
 from src.services.azure_auth import get_access_token
 from src.services.azure_cost import get_subscription_name, get_cost_data
 from src.services.html_renderer import render_html_report
 from src.services.email_service import preview_email
+from src.utils.logger import logger
+
 
 def main():
     try:
@@ -29,9 +31,9 @@ def main():
             actual_month_data = get_cost_data(token, first_day, last_day, subscription_id)
             actual_month_cost = calculate_cost(actual_month_data)
 
-            monthly_forecast = forecast_month_cost + actual_month_cost
+            monthly_forecast = format_currency(forecast_month_cost + actual_month_cost)
             print(f"🔹 Forecasted Cost for {subscription_name} (Feb):")
-            print(f"   ✅ Total Forecast for {first_day.strftime('%B')} {first_day.day} To {last_day.strftime('%B')} {last_day.day}: ${monthly_forecast:.2f}\n")
+            print(f"✅ Total Forecast for {first_day.strftime('%B')} {first_day.day} To {last_day.strftime('%B')} {last_day.day}: {monthly_forecast}\n")
 
             # Generate Email content
             email_html = render_html_report(daily_date, daily_cost_data, first_day, last_day, monthly_forecast, subscription_name)

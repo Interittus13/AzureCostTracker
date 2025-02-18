@@ -1,6 +1,6 @@
 import requests
 from src.config import BASE_URL
-from src.services.utils import format_date
+from src.utils.utils import format_date
 
 def fetch_azure_data(url, token, payload=None):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
