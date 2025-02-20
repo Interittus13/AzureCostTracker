@@ -5,9 +5,9 @@
 ---
 
 ## **🚀 Features**
-✅ Fetches **daily and monthly** cost reports for Azure subscriptions.
-✅ Supports **custom billing periods** per subscription.
-✅ Sends notifications via **email and webhook** (Microsoft Teams, Slack, etc.).
+✅ Fetches **daily and monthly** cost reports for Azure subscriptions.  
+✅ Supports **custom billing periods** per subscription.  
+✅ Sends notifications via **email and webhook** (Microsoft Teams, Slack, etc.).  
 ✅ Allows **previewing email reports** before sending.  
 ✅ Follows **best-practice Python project structure**.
 
@@ -21,6 +21,7 @@ azure-cost-tracker/
 │   ├── config.py             # Configurations (subscriptions, billing periods)
 │   ├── services/
 │   │   ├── azure_auth.py     # Fetch and Manages Access Token
+│   │   ├── azure_billing.py  # Fetch Azure subscription's billing details
 │   │   ├── azure_cost.py     # Fetch Azure cost data
 │   │   ├── email_service.py  # Preview HTML reports
 │   │   ├── html_renderer.py  # Render HTML reports
@@ -103,10 +104,10 @@ azure-cost-tracker
 ---
 
 ## **📡 How to Set Up a Microsoft Teams Webhook**
-1️⃣ Go to **Microsoft Teams** → **Your Channel** → Click `...` → `Connectors`.
-2️⃣ Search for **"Incoming Webhook"** → Click `Add`.
-3️⃣ Name the webhook (e.g., `Azure Cost Alerts`).
-4️⃣ Copy the generated **Webhook URL**.
+1️⃣ Go to **Microsoft Teams** → **Your Channel** → Click `...` → `Connectors`.  
+2️⃣ Search for **"Incoming Webhook"** → Click `Add`.  
+3️⃣ Name the webhook (e.g., `Azure Cost Alerts`).  
+4️⃣ Copy the generated **Webhook URL**.  
 5️⃣ Add it to `.env`:
    ```
    WEBHOOK_URL=https://your-teams-webhook-url
