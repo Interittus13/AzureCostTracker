@@ -68,23 +68,37 @@ def encrypt_token(token):
 
 def decrypt_token():
     """Decrypt the stored token and return it."""
-    if not os.path.exists(TOKEN_FILE):
+    try:
+        if not os.path.exists(TOKEN_FILE):
+            logger.warning("Token not found.")
+            return None
+        
+        key = load_key()
+        cipher = Fernet(key)
+
+        with open(TOKEN_FILE, "rb") as file:
+            encrypted_token = file.read()
+
+        token = json.loads(cipher.decrypt(encrypted_token).decode())
+        return token
+
+    except Exception as e:
+        logger.error(f"Failed to decrypt token: {e}")
         return None
-    
-    key = load_key()
-    cipher = Fernet(key)
-
-    with open(TOKEN_FILE, "rb") as file:
-        encrypted_token = file.read()
-
-    token = json.loads(cipher.decrypt(encrypted_token).decode())
-    return token
 
 
 def is_token_expired(expires_on):
     """Check if the token has expired."""
-    expires_on = datetime.fromtimestamp(int(expires_on), tz=timezone.utc)
-    return datetime.now(timezone.utc) >= expires_on
+    try:
+        expiry_date = datetime.fromtimestamp(int(expires_on), tz=timezone.utc)
+        is_expired = datetime.now(timezone.utc) >= expiry_date
+
+        logger.info(f"Token expired: {is_expired}")
+        return is_expired
+
+    except Exception as e:
+        logger.error(f"Failed to check token expiration: {e}")
+        return True
 
 def remove_token():
     """Remove the stored token and key."""
