@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime, timezone, timedelta
-from re import sub
 from src.services.notifications import send_notification
 from src.config import SUBSCRIPTIONS
 from src.utils.utils import format_currency, calculate_cost, get_forecast_month_date

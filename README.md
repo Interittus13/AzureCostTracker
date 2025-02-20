@@ -20,14 +20,14 @@ azure-cost-tracker/
 │   ├── main.py               # Main script
 │   ├── config.py             # Configurations (subscriptions, billing periods)
 │   ├── services/
-│   │   ├── azure_auth.py     # Fetch Azure cost data
+│   │   ├── azure_auth.py     # Fetch and Manages Access Token
 │   │   ├── azure_cost.py     # Fetch Azure cost data
 │   │   ├── email_service.py  # Preview HTML reports
 │   │   ├── html_renderer.py  # Render HTML reports
 │   │   ├── notifications.py  # Send email and webhook notifications
 │   ├── utils/
 │   │   ├── logger.py         # Logging setup
-│   │   ├── utils.py          # Utilities
+│   │   ├── utils.py          # Helper functions
 │── templates/
 │   ├── email_template.html   # Email template
 │── .env                      # Environment variables
