@@ -1,4 +1,6 @@
+from calendar import monthrange
 from datetime import datetime, timedelta, timezone
+from src.services.azure_billing import get_billing_period
 
 
 # Returns YYYY-MM-DD
@@ -22,20 +24,26 @@ def format_currency(value, currency_symbol="$"):
         return value
 
 
-def get_forecast_date(start_date):
+async def get_forecast_month_date(subscription_id: str):
+    """
+    Fetch the billing start day and adjust it for the current month.
+
+    :param subscription_id: Azure Subscription ID
+    :return: Tuple containing first_day and last_day
+    """
+    last_billing_start_day, _ = get_billing_period(subscription_id)
+
+    start_date = datetime.strptime(last_billing_start_day, "%Y-%m-%d")
     today = datetime.now(timezone.utc)
-    if today.day >= start_date:
-        first_day = today.replace(day=start_date)
-        last_day = (first_day + timedelta(days=32)).replace(day=start_date) - timedelta(
-            days=1
-        )
-        return first_day, last_day
+
+    if today.day >= start_date.day:
+        first_day = today.replace(day=start_date.day)
+        last_day = (first_day + timedelta(days=32)).replace(day=start_date.day) - timedelta(days=1)
     else:
-        first_day = (today.replace(day=start_date) - timedelta(days=32)).replace(
-            day=start_date
-        )
-        last_day = today.replace(day=start_date) - timedelta(days=1)
-        return first_day, last_day
+        first_day = (today.replace(day=start_date.day) - timedelta(days=32)).replace(day=start_date.day)
+        last_day = today.replace(day=start_date.day) - timedelta(days=1)
+
+    return first_day, last_day
 
 
 def calculate_cost(cost_data):

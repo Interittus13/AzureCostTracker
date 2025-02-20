@@ -10,7 +10,7 @@ setup(
     packages=['src', 'src.services'],
     package_data={'': ['../templates/*.html']},
     include_package_data = True,
-    install_requires=["jinja2", "requests", "python-dotenv"],
+    install_requires=["jinja2", "requests", "python-dotenv", "cryptography"],
     entry_points="""
         [console_scripts]
         azure-cost-tracker=src.main:main
