@@ -1,26 +1,196 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Azure Cost Report</title>
         <style>
-            body { font-family: Arial, sans-serif; }
-            table { border-collapse: collapse; width: 100%; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #4CAF50; color: white; }
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 0; 
+                padding: 0; 
+                background-color: #f4f4f4;
+            }
+
+            /* Header */
+            .header {
+                background-color: #4CAF50;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 15px 20px;
+            }
+
+            .logo {
+                height: 40px;
+                width: auto;
+                max-width: 150px;
+            }
+
+            .nav select {
+                padding: 5px;
+                font-size: 16px;
+            }
+
+            /* Report Container */
+            .container {
+                width: 80%;
+                margin: 20px auto;
+                background: white;
+                padding: 20px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                border-radius: 5px;
+            }
+
+            /* Timestamp */
+            .timestamp {
+                font-size: 14px;
+                color: #666;
+                margin-bottom: 15px;
+            }
+
+            /* Cost Cards */
+            .cost-section {
+                display: flex;
+                gap: 20px;
+                margin-bottom: 20px;
+            }
+
+            .cost-card {
+                flex: 1;
+                padding: 15px;
+                background-color: #f9f9f9;
+                border-radius: 8px;
+                text-align: center;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .cost-card h3 {
+                margin: 0;
+                color: #4CAF50;
+                font-size: 18px;
+            }
+
+            .cost-card p {
+                margin: 5px 0;
+                font-size: 22px;
+                font-weight: bold;
+                color: #333;
+            }
+
+            .cost-card span {
+                display: block;
+                font-size: 14px;
+                color: #666;
+                margin-top: 5px;
+            }
+
+            /* Table Styles */
+            table { 
+                border-collapse: collapse; 
+                width: 100%; 
+                margin-top: 10px;
+            }
+
+            th, td { 
+                border: 1px solid #ddd; 
+                padding: 10px; 
+                text-align: left; 
+            }
+
+            th { 
+                background-color: #4CAF50; 
+                color: white; 
+            }
+
+            /* Footer */
+            .footer {
+                text-align: center;
+                padding: 15px;
+                margin-top: 20px;
+                background-color: #4CAF50;
+                color: white;
+            }
+
+            /* Hide all reports initially */
+            .report {
+                display: none;
+            }
+
+            /* Show the first report by default */
+            .report:first-of-type {
+                display: block;
+            }
         </style>
+        <script>
+            function showReport() {
+                var selected = document.getElementById("subscriptionSelect").value;
+                var reports = document.getElementsByClassName("report");
+
+                for (var i = 0; i < reports.length; i++) {
+                    reports[i].style.display = "none";
+                }
+
+                document.getElementById(selected).style.display = "block";
+            }
+        </script>
     </head>
     <body>
-    <h2>🔹 {{subscription_name}} - Cost Report</h2>
-    <h3>📅 Daily Cost Report ({{daily_date}})</h3>
-    <table>
-        <tr>
-            <th>Service Name</th>
-            <th>Cost (CAD)</th>
-        </tr>
-        {{daily_table}}
-    <tr><td><strong>Total Daily Cost</strong></td><td><strong>{{daily_total}}</strong></td></tr>
-    </table>
-    
-    <h3>📊 Forecasted Monthly Cost</h3>
-    <p><strong>Estimated Forecast for ({{first_day_of_month.month}} {{first_day_of_month.day}} to {{last_day_of_month.month}} {{last_day_of_month.day}}):</strong> {{monthly_forecast}}</p>
+
+        <!-- 🔹 Header with Logo and Dropdown -->
+        <div class="header">
+            <img src="static/images/logo.svg" alt="Company Logo" class="logo">  <!-- User-defined logo or default -->
+            <div class="nav">
+                <label for="subscriptionSelect">Select Subscription:</label>
+                <select id="subscriptionSelect" onchange="showReport()">
+                    {% for sub in subscriptions %}
+                        <option value="sub-{{ loop.index }}">{{ sub.subscription_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- 🔹 Report Container -->
+        <div class="container">
+            {% for sub in subscriptions %}
+            <div id="sub-{{ loop.index }}" class="report">
+                <h2>🔹 {{ sub.subscription_name }} - Cost Report</h2>
+
+                <!-- 🕒 Timestamp -->
+                <p class="timestamp">Report Generated on: {{ report_generated_on }}</p>
+
+                <!-- 🔹 Cost Summary Section -->
+                <div class="cost-section">
+                    <div class="cost-card">
+                        <h3>📆 Daily Total Cost</h3>
+                        <p>{{ sub.daily_total }}</p>
+                        <span>For: {{ sub.daily_date }}</span>
+                    </div>
+                    <div class="cost-card">
+                        <h3>📊 Estimated Monthly Forecast</h3>
+                        <p>{{ sub.monthly_forecast }}</p>
+                        <span>({{ sub.first_day_of_month }} - {{ sub.last_day_of_month }})</span>
+                    </div>
+                </div>
+
+                <h3>📅 Daily Cost Report Breakdown</h3>
+                <table>
+                    <tr>
+                        <th>Service Name</th>
+                        <th>Cost (CAD)</th>
+                    </tr>
+                    {{ sub.daily_table | safe }}
+                    <tr><td><strong>Total Daily Cost</strong></td><td><strong>{{ sub.daily_total }}</strong></td></tr>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- 🔹 Footer -->
+        <div class="footer">
+            <p>© 2025 Azure Cost Tracker. All rights reserved.</p>
+        </div>
+
     </body>
 </html>

@@ -13,8 +13,8 @@ def format_currency(value, currency_symbol="$"):
     Format a number into a currency format with commas and two decimal places.
 
     Example:
-    - 1425.20 -> "1,425.20"
-    - 9876543.5 -> "9,876,543.50"
+    - 1425.20 -> "$1,425.20"
+    - 98543.5 -> "$98,543.50"
     """
     try:
         value = float(value)
@@ -43,11 +43,10 @@ async def get_forecast_month_date(subscription_id: str):
 
     if today.day >= start_date:
         first_day = today.replace(day=start_date)
+        last_day = (first_day + timedelta(days=32)).replace(day=start_date) - timedelta(days=1)
     else:
         first_day = (today.replace(day=1) - timedelta(days=1)).replace(day=start_date)
-
-    # Calculate last day of month
-    last_day = (first_day + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        last_day = today.replace(day=start_date) - timedelta(days=1)
 
     return first_day.date(), last_day.date()
 
