@@ -8,10 +8,7 @@ load_dotenv(override=True)
 TENANT_ID = os.getenv("TENANT_ID")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-SUBSCRIPTIONS = {
-    # os.getenv("SUBSCRIPTION_ID1") : {"billing_start": 1},
-    os.getenv("SUBSCRIPTION_ID2"): {"billing_start": 15}
-}
+SUBSCRIPTIONS = set(os.getenv("SUBSCRIPTION_IDS").split(","))
 
 NOTIFY_METHOD = os.getenv("NOTIFY_METHOD", "email")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")

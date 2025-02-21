@@ -15,7 +15,7 @@ def get_billing_period(subscription_id):
     }
 
     response = requests.get(url, headers=headers)
-    if response.status_code == 200:
+    if response.status_code == 200 and len(response.json()["value"]):
         data = response.json()
         latest_billing_period = data.get("value", [])[0]  # Get the most recent billing period
         start_date = latest_billing_period["properties"]["billingPeriodStartDate"]

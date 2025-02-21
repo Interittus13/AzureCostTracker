@@ -34,7 +34,7 @@ async def process_subscription(subscription_id, token, today):
         preview_email(email_html)
         send_notification("Cost Report", email_html)
     except Exception as e:
-        logger.error(f"Error processing subscription {subscription_id}: {str(e)}")
+        logger.exception(f"Error processing subscription {subscription_id}: {str(e)}")
 
 async def main():
     try:

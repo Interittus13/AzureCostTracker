@@ -35,7 +35,6 @@ def get_access_token():
             "expires_on": expires_on
         }
 
-        print(token_data["expires_on"])
         encrypt_token(token_data)
         return access_token
     else:

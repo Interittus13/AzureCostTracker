@@ -43,7 +43,7 @@ azure-cost-tracker/
 
 ### **1️⃣ Clone the Repository**
 ```bash
-git clone https://github.com/interittus13/azurecosttracker
+git clone https://github.com/interittus13/AzureCostTracker
 cd azurecosttracker
 ```
 
@@ -58,7 +58,7 @@ Create a `.env` file with your settings:
 TENANT_ID=your-azure-tenant-id
 CLIENT_ID=your-azure-client-id
 CLIENT_SECRET=your-azure-client-secret
-SUBSCRIPTION_ID1=your-azure-subscription-id
+SUBSCRIPTION_IDS=subscription-id1,subscription-id2
 
 EMAIL_FROM=your-email@example.com
 EMAIL_TO=test@example.com,test2@yopmail.com

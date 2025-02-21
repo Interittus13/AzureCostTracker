@@ -29,21 +29,27 @@ async def get_forecast_month_date(subscription_id: str):
     Fetch the billing start day and adjust it for the current month.
 
     :param subscription_id: Azure Subscription ID
-    :return: Tuple containing first_day and last_day
+    :return: Tuple containing (first_day, last_day)
     """
     last_billing_start_day, _ = get_billing_period(subscription_id)
 
-    start_date = datetime.strptime(last_billing_start_day, "%Y-%m-%d")
+    # If API returns None, assume billing starts on 1st of month
+    if last_billing_start_day:
+        start_date = datetime.strptime(last_billing_start_day, "%Y-%m-%d").day
+    else:
+        start_date = 1
+
     today = datetime.now(timezone.utc)
 
-    if today.day >= start_date.day:
-        first_day = today.replace(day=start_date.day)
-        last_day = (first_day + timedelta(days=32)).replace(day=start_date.day) - timedelta(days=1)
+    if today.day >= start_date:
+        first_day = today.replace(day=start_date)
     else:
-        first_day = (today.replace(day=start_date.day) - timedelta(days=32)).replace(day=start_date.day)
-        last_day = today.replace(day=start_date.day) - timedelta(days=1)
+        first_day = (today.replace(day=1) - timedelta(days=1)).replace(day=start_date)
 
-    return first_day, last_day
+    # Calculate last day of month
+    last_day = (first_day + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+
+    return first_day.date(), last_day.date()
 
 
 def calculate_cost(cost_data):
