@@ -1,12 +1,12 @@
 import asyncio
 from datetime import datetime, timezone, timedelta
-from src.services.notifications import send_notification
-from src.config import SUBSCRIPTIONS
+from src.config import NOTIFY_METHOD, SUBSCRIPTIONS
+from src.services.webhook_service import send_webhook_notification
+from src.services.email_service import send_email_notification, preview_email
 from src.utils.utils import format_currency, calculate_cost, get_cost_breakdown, get_forecast_month_date
 from src.services.azure_auth import get_access_token
 from src.services.azure_cost import get_subscription_name, get_cost_data
-from src.services.html_renderer import render_html_report
-from src.services.email_service import preview_email
+from src.services.html_renderer import render_html_report, render_html_summary
 from src.utils.logger import logger
 
 
@@ -59,11 +59,19 @@ async def main():
         if subscription_data:
             # Generate Email content
             email_html = render_html_report(subscription_data)
+            summary = render_html_summary(subscription_data)
+
+            if NOTIFY_METHOD in ["email", "both"]:
+                send_email_notification("Azure Cost Report", summary, email_html)
+            
+            if NOTIFY_METHOD in ["webhook", "both"]:
+                send_webhook_notification(email_html)
+
             preview_email(email_html)
         else:
             logger.warning("No data available to generate the report.")
     except Exception as e:
-        logger.error(f"Error in main execution: {e}")
+        logger.exception(f"Error in main execution: {e}")
 
 
 if __name__ == "__main__":
