@@ -11,8 +11,8 @@
 ✅ Fetches **daily and monthly forecast** cost reports for Azure subscriptions.  
 ✅ Sends notifications via **email and webhook** (Microsoft Teams, Slack, etc.).  
 ✅ Allows **previewing email reports**.  
-✅ Modern, Clean, interactive HTML report with subscription selection.  
-✅ Supports **logo upload** for company branding.  
+✅ Modern, Clean HTML report.  
+✅ Supports custom **logo** and **color scheme** for company branding.  
 ✅ Follows **best-practice Python project structure**.
 
 ---
