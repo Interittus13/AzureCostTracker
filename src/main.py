@@ -3,10 +3,10 @@ from datetime import datetime, timezone, timedelta
 from src.config import NOTIFY_METHOD, SUBSCRIPTIONS
 from src.services.webhook_service import send_webhook_notification
 from src.services.email_service import send_email_notification, preview_email
-from src.utils.utils import format_currency, calculate_cost, get_cost_breakdown, get_forecast_month_date
+from src.utils.utils import calculate_cost, get_cost_breakdown, get_forecast_month_date
 from src.services.azure_auth import get_access_token
 from src.services.azure_cost import get_subscription_name, get_cost_data
-from src.services.html_renderer import render_html_report, render_html_summary
+from src.services.html_renderer import render_html_report
 from src.utils.logger import logger
 
 
@@ -25,7 +25,7 @@ async def process_subscription(subscription_id, token, today):
         monthly_forecast_data = get_cost_data(token, first_day, last_day, subscription_id, "forecast")
 
         daily_table, daily_total = get_cost_breakdown(daily_cost_data)
-        monthly_forecast = format_currency(calculate_cost(monthly_forecast_data))
+        monthly_forecast = calculate_cost(monthly_forecast_data)
 
         print(f"✅ Daily Cost for {subscription_name}: {calculate_cost(daily_cost_data)}")
         print(f"✅ Forecasted Cost for {subscription_name}: {monthly_forecast}")
@@ -59,10 +59,9 @@ async def main():
         if subscription_data:
             # Generate Email content
             email_html = render_html_report(subscription_data)
-            summary = render_html_summary(subscription_data)
 
             if NOTIFY_METHOD in ["email", "both"]:
-                send_email_notification("Azure Cost Report", summary, email_html)
+                send_email_notification("Azure Cost Report", email_html)
             
             if NOTIFY_METHOD in ["webhook", "both"]:
                 send_webhook_notification(email_html)

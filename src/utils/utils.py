@@ -1,4 +1,3 @@
-from calendar import monthrange
 from datetime import datetime, timedelta, timezone
 from src.services.azure_billing import get_billing_period
 
@@ -57,7 +56,7 @@ def calculate_cost(cost_data):
         for item in cost_data.get("properties", {}).get("rows", [])
         if isinstance(item[0], (int, float))
     )
-    return total_cost
+    return format_currency(total_cost)
 
 
 def get_cost_breakdown(cost_data):

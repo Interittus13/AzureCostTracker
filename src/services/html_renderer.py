@@ -25,11 +25,3 @@ def render_html_report(subscription_data):
     }
 
     return template.render(**context)
-
-def render_html_summary(subscription_data):
-    """
-    Renders the HTML summary using Jinja2.
-    """
-    template = env.get_template("cost-summary.html")
-
-    return template.render(subscriptions=subscription_data)

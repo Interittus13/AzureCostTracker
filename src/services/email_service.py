@@ -1,18 +1,23 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
+import os
 import webbrowser
 from src.config import SMTP_SERVER, SMTP_PORT, SMTP_PASS, EMAIL_FROM, EMAIL_TO
 from src.utils.logger import logger
 
-def preview_email(html):
-    temp_file = "preview.html"
+def preview_email(html, filename="preview.html"):
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    temp_file = os.path.join(output_dir, filename)
+
     with open(temp_file, "w", encoding="utf-8") as file:
         file.write(html)
 
     webbrowser.open(temp_file)
 
-def send_email_notification(subject, summary, html_content):
+def send_email_notification(subject, html_content):
     """Send email with cost report."""
     recipients = [email.strip() for email in EMAIL_TO.split(",") if email.strip()]
     msg = MIMEMultipart()
@@ -20,11 +25,7 @@ def send_email_notification(subject, summary, html_content):
     msg["To"] = ", ".join(recipients)
     msg["Subject"] = subject
 
-    msg.attach(MIMEText(summary, "html"))
-
-    attachment = MIMEText(html_content, "html")
-    attachment.add_header("Content-Disposition", "attachment", filename="Azure_Cost_Report.html")
-    msg.attach(attachment)
+    msg.attach(MIMEText(html_content, "html"))
 
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
