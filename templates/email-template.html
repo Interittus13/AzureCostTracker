@@ -161,6 +161,7 @@
         </div>
 
         <!-- 🔹 Cost Breakdown Table -->
+         {% if SHOW_DAILY_REPORT %}
         <h3>📅 Daily Cost Breakdown</h3>
         <table>
             <tr>
@@ -170,6 +171,7 @@
             {{ sub.daily_table | safe }}
             <tr><td><strong>Total Daily Cost</strong></td><td><strong>{{ sub.daily_total }}</strong></td></tr>
         </table>
+        {% endif %}
     </div>
     {% endfor %}
 

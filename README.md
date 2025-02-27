@@ -76,6 +76,7 @@ SMTP_PASS=your-password
 
 WEBHOOK_URL=https://your-teams-webhook-url
 NOTIFY_METHOD=email  # Options: email, webhook, both
+SHOW_DAILYCOST_BREAKDOWN=false
 ```
 
 ---

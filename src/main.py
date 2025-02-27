@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime, timezone, timedelta
-from src.config import NOTIFY_METHOD, SUBSCRIPTIONS
+from src.config import NOTIFY_METHOD, SHOW_DAILYCOST_BREAKDOWN, SUBSCRIPTIONS
 from src.services.webhook_service import send_webhook_notification
 from src.services.email_service import send_email_notification, preview_email
 from src.utils.utils import calculate_cost, get_cost_breakdown, get_forecast_month_date
@@ -24,22 +24,26 @@ async def process_subscription(subscription_id, token, today):
         daily_cost_data = get_cost_data(token, daily_date, daily_date, subscription_id)
         monthly_forecast_data = get_cost_data(token, first_day, last_day, subscription_id, "forecast")
 
-        daily_table, daily_total = get_cost_breakdown(daily_cost_data)
+        if SHOW_DAILYCOST_BREAKDOWN:
+            daily_table, daily_total = get_cost_breakdown(daily_cost_data)
+        else:
+            daily_total = calculate_cost(daily_cost_data)
         monthly_forecast = calculate_cost(monthly_forecast_data)
 
-        print(f"✅ Daily Cost for {subscription_name}: {calculate_cost(daily_cost_data)}")
-        print(f"✅ Forecasted Cost for {subscription_name}: {monthly_forecast}")
-
-
-        return {
+        result = {
             "subscription_name": subscription_name,
             "daily_date": daily_date.strftime("%B %d %Y"),
             "first_day_of_month": first_day.strftime("%B %d %Y"),
             "last_day_of_month": last_day.strftime("%B %d %Y"),
-            "daily_table": daily_table,
+            # "daily_table": daily_table,
             "daily_total": daily_total,
             "monthly_forecast": monthly_forecast,
         }
+
+        if SHOW_DAILYCOST_BREAKDOWN:
+            result["daily_table"] = daily_table
+
+        return result
     except Exception as e:
         logger.exception(f"Error processing subscription {subscription_id}: {str(e)}")
 
@@ -70,7 +74,7 @@ async def main():
         else:
             logger.warning("No data available to generate the report.")
     except Exception as e:
-        logger.exception(f"Error in main execution: {e}")
+        logger.error(f"Error in main execution: {e}")
 
 
 if __name__ == "__main__":

@@ -4,12 +4,16 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv(override=True)
 
+def str_to_bool(value):
+    return str(value).lower() in ("true", "1", "yes")
+
 # Azure Creds
 TENANT_ID = os.getenv("TENANT_ID")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 SUBSCRIPTIONS = set(os.getenv("SUBSCRIPTION_IDS").split(","))
 
+SHOW_DAILYCOST_BREAKDOWN = str_to_bool(os.getenv("SHOW_DAILYCOST_BREAKDOWN", "False"))
 NOTIFY_METHOD = os.getenv("NOTIFY_METHOD", "email")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 SMTP_SERVER = os.getenv("SMTP_SERVER")
