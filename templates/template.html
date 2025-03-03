@@ -48,7 +48,6 @@
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-            min-width: 200px;
             transition: transform 0.2s;
         }
 
@@ -165,7 +164,7 @@
 
         @media (max-width: 768px) {
             .summary-cards {
-                flex-direction: column;
+                flex-direction: inherit;
             }
 
             .card {
@@ -176,6 +175,8 @@
 </head>
 
 <body>
+    {% set cost_keys = subscriptions[0].keys() | list if subscriptions else [] %}
+    {% set cost_keys = cost_keys | reject('eq', 'subscription_name') | list %}
     <div class="container">
         <div class="header">
             <h1>Azure Cost Report</h1>
@@ -183,21 +184,17 @@
         </div>
 
         <div class="summary-cards">
-            {% for entries in total %}
-            {% for k,v in entries.items() %}
+            {% for key in cost_keys %}
             <div class="card">
-                <div class="card-title">{{k | replace("_", " ")}}</div>
-                <div class="card-body">{{v}}</div>
+                <div class="card-title">{{ key.replace('_', ' ') | title }}</div>
+                <div class="card-body">{{ subscriptions | map(attribute=key) | sum }}</div>
                 <div class="card-footer">CAD</div>
             </div>
-            {% endfor %}
             {% endfor %}
         </div>
 
         <div class="section">
             <h2>Daily Cost Report</h2>
-            {% set cost_keys = subscriptions[0].keys() | list if subscriptions else [] %}
-            {% set cost_keys = cost_keys | reject('eq', 'subscription_name') | list %}
             <table>
                 <tr>
                     <th>Subscription</th>
@@ -224,7 +221,7 @@
             </table>
             
             <div class="visualize">
-                {% set cost_keys = ['daily_cost', 'month_to_day', 'year_to_day'] %}
+                {% set cost_keys = ['daily_cost', 'month_to_day', 'month_forecast', 'year_to_day', 'year_forecast'] %}
                 {% for cost_key in cost_keys %}
                 {% set total_cost = subscriptions | map(attribute=cost_key) | sum %}
                 <div class="chart">

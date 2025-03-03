@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from decimal import ROUND_HALF_UP, Decimal
 from src.services.azure_billing import get_billing_period
 
 
@@ -56,11 +57,11 @@ async def get_forecast_month_date(subscription_id: str):
 
 def calculate_cost(data):
     total_cost = sum(
-        item[0]
+        Decimal(str(item[0]))
         for item in data.get("properties", {}).get("rows", [])
         if isinstance(item[0], (int, float))
     )
-    return round(total_cost, 2)
+    return total_cost.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
 def get_cost_breakdown(cost_data):
