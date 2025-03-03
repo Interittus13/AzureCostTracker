@@ -30,13 +30,9 @@ async def get_forecast_month_date(subscription_id: str):
     :param subscription_id: Azure Subscription ID
     :return: Tuple containing (first_day, last_day)
     """
-    today = datetime.now(timezone.utc)
+    today = datetime.now()
     yesterday = today - timedelta(days=2) # today - 2 for fetching daily cost
-    current_month = today.month
-    current_year = today.year
 
-    year_start = datetime(current_year, 1, 1)
-    year_end = datetime(current_year, 12, 31).strftime("%Y-%m-%d")
     last_billing_start_day, _ = get_billing_period(subscription_id)
 
     # If API returns None, assume billing starts on 1st of month
@@ -45,12 +41,16 @@ async def get_forecast_month_date(subscription_id: str):
     month_starts_on = today.replace(day=start_day) if today.day >= start_day else (today - timedelta(days=today.day)).replace(day=start_day)
     month_ends_on = (month_starts_on + timedelta(days=32)).replace(day=start_day) - timedelta(days=1)
 
+    year_starts_on = datetime(today.year, 1, start_day) if today >= datetime(today.year, 1, start_day) else datetime(today.year - 1, 1, start_day)
+    year_ends_on = datetime(year_starts_on.year + 1, 1, start_day) - timedelta(days=1)
+
     return {
         "today": today.strftime('%Y-%m-%d'),
         "yesterday": yesterday.strftime('%Y-%m-%d'),
         "month_starts_on": month_starts_on.strftime('%Y-%m-%d'),
         "month_ends_on": month_ends_on.strftime('%Y-%m-%d'),
-        "year_start": year_start.strftime("%Y-%m-%d"),
+        "year_starts_on": year_starts_on.strftime("%Y-%m-%d"),
+        "year_ends_on": year_ends_on.strftime("%Y-%m-%d"),
     }
 
 

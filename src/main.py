@@ -1,4 +1,5 @@
 import asyncio
+from tkinter import NO
 from src.config import NOTIFY_METHOD, SHOW_DAILYCOST_BREAKDOWN, SUBSCRIPTIONS
 from src.services.webhook_service import send_webhook_notification
 from src.services.email_service import send_email_notification, preview_email
@@ -24,23 +25,23 @@ async def process_subscription(subscription_id, token):
         # Fetch Daily costing and Monthly Forecast
         daily_cost_data = get_cost_data(token, dates["yesterday"], dates["yesterday"], subscription_id)
         month_to_date = get_cost_data(token, dates["month_starts_on"], dates["today"], subscription_id)
-        year_to_date = get_cost_data(token, dates["year_start"], dates["today"], subscription_id)
+        year_to_date = get_cost_data(token, dates["year_starts_on"], dates["today"], subscription_id)
         month_forecast_data = get_cost_data(token, dates["month_starts_on"], dates["month_ends_on"], subscription_id, "forecast")
+        year_forecast_data = get_cost_data(token, dates["year_starts_on"], dates["year_ends_on"], subscription_id, "forecast")
 
         daily_cost = calculate_cost(daily_cost_data)
         mtd_cost = calculate_cost(month_to_date)
         ytd_cost = calculate_cost(year_to_date)
-        monthly_forecast = calculate_cost(month_forecast_data)
-
-        # print(daily_total, mtd_total, ytd_total)
-        # return None
+        month_forecast = calculate_cost(month_forecast_data)
+        year_forecast = calculate_cost(year_forecast_data)
 
         return {
                 "subscription_name": subscription_name,
                 "daily_cost": daily_cost,
                 "month_to_day": mtd_cost,
-                "monthly_forecast": monthly_forecast,
+                "month_forecast": month_forecast,
                 "year_to_day": ytd_cost,
+                "year_forecast": year_forecast,
         }
 
         # if SHOW_DAILYCOST_BREAKDOWN:
@@ -98,7 +99,7 @@ async def main():
             # "report_generated_on": datetime.now().strftime("%B %d, %Y")
         }
         # Generate Email content
-        print(final_data)
+        # print(final_data)
         email_html = render_html_report(final_data)
         preview_email(email_html)
 
