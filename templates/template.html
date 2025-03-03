@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Cost report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background-color: #0078D4;
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 5px 5px 0 0;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .summary-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            flex: 1;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+            transition: transform 0.2s;
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 4px;
+            text-transform: capitalize;
+        }
+
+        .card-body {
+            font-size: 32px;
+            font-weight: 600;
+            margin: 0;
+            color: #0078D4;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 30px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #0078D4;
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 10px;
+            font-weight: 500;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f8fd;
+            color: #0078d4;
+            font-weight: 500;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #e6f2ff;
+        }
+
+        .bar-chart {
+            height: 20px;
+            background-color: #e6f2ff;
+            position: relative;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .visualize {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .chart {
+            flex: 1;
+            min-width: 300px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #0078D4;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .chart-body {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bar {
+            height: 100%;
+            background-color: #0078D4;
+            position: relative;
+            left: 0;
+            top: 0;
+            border-radius: 3px;
+        }
+
+        .bar-label {
+            position: relative;
+            z-index: 1;
+            padding: 0 10px;
+            font-size: 12px;
+            line-height: 20px;
+            color: #333;
+            text-shadow: 0 0 2px #fff;
+        }
+
+        @media (max-width: 768px) {
+            .summary-cards {
+                flex-direction: column;
+            }
+
+            .card {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Azure Cost Report</h1>
+            <p>Report period: {}</p>
+        </div>
+
+        <div class="summary-cards">
+            {% for entries in total %}
+            {% for k,v in entries.items() %}
+            <div class="card">
+                <div class="card-title">{{k | replace("_", " ")}}</div>
+                <div class="card-body">{{v}}</div>
+                <div class="card-footer">CAD</div>
+            </div>
+            {% endfor %}
+            {% endfor %}
+        </div>
+
+        <div class="section">
+            <h2>Daily Cost Report</h2>
+            {% set cost_keys = subscriptions[0].keys() | list if subscriptions else [] %}
+            {% set cost_keys = cost_keys | reject('eq', 'subscription_name') | list %}
+            <table>
+                <tr>
+                    <th>Subscription</th>
+                    {% for key in cost_keys %}
+                    <th>{{ key.replace('_', ' ') | title }}</th>
+                    {% endfor %}
+                </tr>
+
+                {% for entry in subscriptions %}
+                <tr>
+                    <td>{{ entry.get('subscription_name', 'Unknown')}}</td>
+                    {% for key in cost_keys %}
+                    <td>{{ entry.get(key, 0) }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+
+                <tr class="total-row">
+                    <td>Total</td>
+                    {% for key in cost_keys %}
+                    <td>{{ subscriptions | map(attribute=key) | sum }}</td>
+                    {% endfor %}
+                </tr>
+            </table>
+            
+            <div class="visualize">
+                {% set cost_keys = ['daily_cost', 'month_to_day', 'year_to_day'] %}
+                {% for cost_key in cost_keys %}
+                {% set total_cost = subscriptions | map(attribute=cost_key) | sum %}
+                <div class="chart">
+                    <div class="chart-title">{{ cost_key.replace('_', ' ') | title }}</div>
+                    {% for entries in subscriptions %}
+                    {% set percentage = (entries.get(cost_key, 0) / total_cost * 100) | round(2) if total_cost > 0 else 0 %}
+                    <div style="margin-bottom: 15px;">    
+                        <div class="chart-body">
+                            <div>{{ (entries.get('subscription_name', 'Unknown')) }}</div>
+                            <div>{{ entries.get(cost_key, 0) }} ({{ percentage }})%</div>
+                        </div>
+                        <div class="bar-chart">
+                            <div class="bar" style="width:{{ percentage }}%;"></div>
+                            <div class="bar-label">{{ percentage }}%</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>

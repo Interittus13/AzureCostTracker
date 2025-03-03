@@ -30,33 +30,37 @@ async def get_forecast_month_date(subscription_id: str):
     :param subscription_id: Azure Subscription ID
     :return: Tuple containing (first_day, last_day)
     """
+    today = datetime.now(timezone.utc)
+    yesterday = today - timedelta(days=2) # today - 2 for fetching daily cost
+    current_month = today.month
+    current_year = today.year
+
+    year_start = datetime(current_year, 1, 1)
+    year_end = datetime(current_year, 12, 31).strftime("%Y-%m-%d")
     last_billing_start_day, _ = get_billing_period(subscription_id)
 
     # If API returns None, assume billing starts on 1st of month
-    if last_billing_start_day:
-        start_date = datetime.strptime(last_billing_start_day, "%Y-%m-%d").day
-    else:
-        start_date = 1
+    start_day = datetime.strptime(last_billing_start_day, "%Y-%m-%d").day if last_billing_start_day else 1
 
-    today = datetime.now(timezone.utc)
+    month_starts_on = today.replace(day=start_day) if today.day >= start_day else (today - timedelta(days=today.day)).replace(day=start_day)
+    month_ends_on = (month_starts_on + timedelta(days=32)).replace(day=start_day) - timedelta(days=1)
 
-    if today.day >= start_date:
-        first_day = today.replace(day=start_date)
-        last_day = (first_day + timedelta(days=32)).replace(day=start_date) - timedelta(days=1)
-    else:
-        first_day = (today.replace(day=1) - timedelta(days=1)).replace(day=start_date)
-        last_day = today.replace(day=start_date) - timedelta(days=1)
-
-    return first_day.date(), last_day.date()
+    return {
+        "today": today.strftime('%Y-%m-%d'),
+        "yesterday": yesterday.strftime('%Y-%m-%d'),
+        "month_starts_on": month_starts_on.strftime('%Y-%m-%d'),
+        "month_ends_on": month_ends_on.strftime('%Y-%m-%d'),
+        "year_start": year_start.strftime("%Y-%m-%d"),
+    }
 
 
-def calculate_cost(cost_data):
+def calculate_cost(data):
     total_cost = sum(
         item[0]
-        for item in cost_data.get("properties", {}).get("rows", [])
+        for item in data.get("properties", {}).get("rows", [])
         if isinstance(item[0], (int, float))
     )
-    return format_currency(total_cost)
+    return round(total_cost, 2)
 
 
 def get_cost_breakdown(cost_data):
@@ -74,6 +78,12 @@ def get_cost_breakdown(cost_data):
         cost, _, service_name, currency = item[:4]
         total_cost += cost if isinstance(cost, (int, float)) else 0
 
-        breakdown.append({"service": service_name, "cost": format_currency(cost), "currency": currency})
+        breakdown.append(
+            {
+                "service": service_name,
+                "cost": format_currency(cost),
+                "currency": currency,
+            }
+        )
 
     return breakdown, format_currency(total_cost)
