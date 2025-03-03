@@ -176,11 +176,11 @@
 
 <body>
     {% set cost_keys = subscriptions[0].keys() | list if subscriptions else [] %}
-    {% set cost_keys = cost_keys | reject('eq', 'subscription_name') | list %}
+    {% set cost_keys = cost_keys | reject('eq', 'subscription_name') | reject('eq', 'dates') | list %}
     <div class="container">
         <div class="header">
             <h1>Azure Cost Report</h1>
-            <p>Report period: {}</p>
+            <p>Report period: {{report_for}}</p>
         </div>
 
         <div class="summary-cards">
@@ -221,7 +221,7 @@
             </table>
             
             <div class="visualize">
-                {% set cost_keys = ['daily_cost', 'month_to_day', 'month_forecast', 'year_to_day', 'year_forecast'] %}
+
                 {% for cost_key in cost_keys %}
                 {% set total_cost = subscriptions | map(attribute=cost_key) | sum %}
                 <div class="chart">

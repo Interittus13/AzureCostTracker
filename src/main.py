@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from tkinter import NO
 from src.config import NOTIFY_METHOD, SUBSCRIPTIONS
 from src.services.webhook_service import send_webhook_notification
@@ -33,6 +34,7 @@ async def process_subscription(subscription_id, token):
                 "month_forecast": calculate_cost(month_forecast_data),
                 "year_to_day": calculate_cost(ytd_data),
                 "year_forecast": calculate_cost(year_forecast_data),
+                "dates": dates
         }
 
     except Exception as e:
@@ -58,18 +60,18 @@ async def main():
         # Generate Summary
         final_data = {
             "subscriptions": subscription_data,
-            # "report_generated_on": datetime.now().strftime("%B %d, %Y")
+            "report_for": subscription_data[0].get('dates', {}).get('yesterday'),
+            "report_generated_on": subscription_data[0].get('dates', {}).get('today')
         }
-        # Generate Email content
-        # print(final_data)
+
         email_html = render_html_report(final_data)
         preview_email(email_html)
 
-        # if NOTIFY_METHOD in ["email", "both"]:
-        #     send_email_notification("Azure Cost Report", email_html)
+        if NOTIFY_METHOD in ["email", "both"]:
+            send_email_notification("Azure Cost Report", email_html)
 
-        # if NOTIFY_METHOD in ["webhook", "both"]:
-        #     send_webhook_notification(email_html)
+        if NOTIFY_METHOD in ["webhook", "both"]:
+            send_webhook_notification(email_html)
 
     except Exception as e:
         logger.exception(f"Error in main execution: {e}")

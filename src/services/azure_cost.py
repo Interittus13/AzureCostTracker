@@ -1,5 +1,6 @@
 import requests
 import time
+from src.utils.logger import logger
 from src.config import BASE_URL
 
 
@@ -21,15 +22,15 @@ def fetch_azure_data(url, token, payload=None, max_retries=5, backoff_factor=2):
             if response.status_code == 429:
                 retry_after = int(response.headers.get("x-ms-ratelimit-microsoft.costmanagement-entity-retry-after", 2))
                 wait_time = max(retry_after, backoff_factor ** retry_count)
-                print(f"Rate limit exceeded (429). Retrying in {wait_time} seconds...")
+                logger.warning(f"Rate limit exceeded (429). Retrying in {wait_time} seconds...")
                 time.sleep(wait_time)
                 retry_count += 1
                 continue
 
-            print(f"Error {response.status_code}: {response.json()}")
+            logger.error(f"Error {response.status_code}: {response.json()}")
             response.raise_for_status()
     except Exception as e:
-        print(f"Failed after {max_retries}")
+        logger.error(f"Failed after {max_retries}")
 
 
 
