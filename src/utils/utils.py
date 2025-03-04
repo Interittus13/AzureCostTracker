@@ -1,12 +1,6 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from src.services.azure_billing import get_billing_period
-
-
-# Returns YYYY-MM-DD
-def format_date(date):
-    return date.strftime("%Y-%m-%d")
-
 
 def format_currency(value, currency_symbol="$"):
     """

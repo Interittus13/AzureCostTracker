@@ -1,18 +1,18 @@
 # AzureCostTracker - ACT
 
-**Azure Cost Tracker** is a Python-based tool that tracks **Azure subscription costs**, generates **HTML reports**, and sends notifications via **email** or **webhooks (Microsoft Teams, Slack, etc.)**.
+**Azure Cost Tracker** is a Python-based tool that tracks **Azure subscription costs**, generates **dynamic HTML reports**, and sends notifications via **email** or **webhooks (Microsoft Teams, Slack, etc.)**.
 
 ### 📊 Feature Preview:
-<img src="static/images/report_screenshot.png" width="80%" alt="Report Screenshot"></img>
+<img src="static/images/report_screenshot.png" width="90%" alt="Report Screenshot"></img>
 
 ---
 
 ## 🌟 Features
-✅ Fetches **daily and monthly forecast** cost reports for Azure subscriptions.  
+✅ Fetches **daily, monthly and yearly forecast** cost reports for Azure subscriptions.  
+✅ **Dynamically groups data** by cost categories for better readability.  
 ✅ Sends notifications via **email and webhook** (Microsoft Teams, Slack, etc.).  
 ✅ Allows **previewing email reports**.  
-✅ Modern, Clean HTML report.  
-✅ Supports custom **logo** and **color scheme** for company branding.  
+✅ Modern, Clean HTML report.   
 ✅ Follows **best-practice Python project structure**.
 
 ---
@@ -27,9 +27,9 @@ azure-cost-tracker/
 │   │   ├── azure_auth.py              # Fetch and Manages Access Token
 │   │   ├── azure_billing.py           # Fetch Azure subscription's billing details
 │   │   ├── azure_cost.py              # Fetch Azure cost data
-│   │   ├── email_service.py           # Preview HTML reports
+│   │   ├── email_service.py           # Sends email notification
 │   │   ├── html_renderer.py           # Render HTML reports
-│   │   ├── notifications.py           # Send email and webhook notifications
+│   │   ├── webhook_service.py         # Sends webhook notifications
 │   ├── utils/
 │   │   ├── logger.py                  # Logging setup
 │   │   ├── utils.py                   # Helper functions
@@ -76,7 +76,6 @@ SMTP_PASS=your-password
 
 WEBHOOK_URL=https://your-teams-webhook-url
 NOTIFY_METHOD=email  # Options: email, webhook, both
-SHOW_DAILYCOST_BREAKDOWN=false
 ```
 
 ---

@@ -1,11 +1,11 @@
 import asyncio
 from src.config import NOTIFY_METHOD, SUBSCRIPTIONS
 from src.services.webhook_service import send_webhook_notification
-from src.services.email_service import send_email_notification, preview_email
+from src.services.email_service import send_email_notification
 from src.utils.utils import (calculate_cost, get_forecast_month_date)
 from src.services.azure_auth import get_access_token
 from src.services.azure_cost import get_subscription_name, get_cost_data
-from src.services.html_renderer import render_html_report
+from src.services.html_renderer import render_html_report, preview_email
 from src.utils.logger import logger
 
 
@@ -48,9 +48,9 @@ async def main():
         tasks = [process_subscription(sub_id.strip(), token) for sub_id in SUBSCRIPTIONS]
         subscription_data = [res for res in await asyncio.gather(*tasks) if res]
 
-        # if not subscription_data:
-        #     logger.warning("No data available to generate the report.")
-        #     return
+        if not subscription_data:
+            logger.warning("No data available to generate the report.")
+            return
 
         # Generate Summary
         final_data = {

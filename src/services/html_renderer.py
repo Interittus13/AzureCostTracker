@@ -1,10 +1,17 @@
 import os
-from datetime import datetime
+import webbrowser
 from jinja2 import Environment, FileSystemLoader
-from src.config import SHOW_DAILYCOST_BREAKDOWN
 
-TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "../../templates")
-env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
+def preview_email(html, filename="preview.html"):
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    temp_file = os.path.join(output_dir, filename)
+
+    with open(temp_file, "w", encoding="utf-8") as file:
+        file.write(html)
+
+    webbrowser.open(temp_file)
 
 def render_html_report(subscription_data):
     """
@@ -13,20 +20,9 @@ def render_html_report(subscription_data):
     :param subscription_data: List of subscription cost data
     :return: Rendered HTML report as a string
     """
-    template = env.get_template("template.html")
+    TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "../../templates")
+    env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
 
-    # if SHOW_DAILYCOST_BREAKDOWN:
-    #     for sub in subscription_data:
-    #         sub["daily_table"] = "".join(
-    #             f"<tr><td>{item['service']}</td><td>{item['cost']} {item['currency']}</td></tr>"
-    #             for item in sub["daily_table"]
-    #         )
-
-    # context = {
-    #     "subscriptions_data": subscription_data,
-    #     # "report_generated_on": datetime.now().strftime("%B %d, %Y"),
-    #     # "SHOW_DAILY_REPORT
-    #     # ": SHOW_DAILYCOST_BREAKDOWN
-    # }
+    template = env.get_template("report_template.html")
 
     return template.render(subscription_data)

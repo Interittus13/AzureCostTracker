@@ -1,21 +1,8 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
-import os
-import webbrowser
 from src.config import SMTP_SERVER, SMTP_PORT, SMTP_PASS, EMAIL_FROM, EMAIL_TO
 from src.utils.logger import logger
-
-def preview_email(html, filename="preview.html"):
-    output_dir = "output"
-    os.makedirs(output_dir, exist_ok=True)
-
-    temp_file = os.path.join(output_dir, filename)
-
-    with open(temp_file, "w", encoding="utf-8") as file:
-        file.write(html)
-
-    webbrowser.open(temp_file)
 
 def send_email_notification(subject, html_content):
     """Send email with cost report."""
