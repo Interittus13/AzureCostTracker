@@ -1,6 +1,4 @@
 import asyncio
-from datetime import datetime
-from tkinter import NO
 from src.config import NOTIFY_METHOD, SUBSCRIPTIONS
 from src.services.webhook_service import send_webhook_notification
 from src.services.email_service import send_email_notification, preview_email
@@ -54,9 +52,6 @@ async def main():
         #     logger.warning("No data available to generate the report.")
         #     return
 
-        # total_daily_cost = sum(sub["daily_total"] for sub in subscription_list)
-        # total_monthly_forecast = sum(sub["monthly_forecast"] for sub in subscription_list)
-
         # Generate Summary
         final_data = {
             "subscriptions": subscription_data,
@@ -76,6 +71,8 @@ async def main():
     except Exception as e:
         logger.exception(f"Error in main execution: {e}")
 
+def run():
+    asyncio.run(main())
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run()
