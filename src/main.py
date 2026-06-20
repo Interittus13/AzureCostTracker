@@ -8,8 +8,12 @@ from src.services.email_service import send_email_notification
 from src.utils.utils import (calculate_cost, get_forecast_month_date, get_cost_breakdown, get_currency_symbol)
 from src.services.azure_auth import get_access_token
 from src.services.azure_cost import get_subscription_name, get_cost_data
-from src.services.html_renderer import render_html_report, preview_email, export_html_to_pdf
+from src.services.report import PdfExporter, ReportMode, ReportRenderer
+from src.services.html_renderer import preview_email
 from src.utils.logger import logger
+
+_renderer = ReportRenderer()
+_pdf_exporter = PdfExporter()
 
 
 async def process_subscription(subscription_id, token):
@@ -59,6 +63,7 @@ async def get_report_data():
     token = get_access_token()
     tasks = [process_subscription(sub_id.strip(), token) for sub_id in SUBSCRIPTIONS]
     subscription_data = [res for res in await asyncio.gather(*tasks) if res]
+    subscription_data.sort(key=lambda entry: entry.get("subscription_name", ""))
 
     if not subscription_data:
         raise ValueError("No data available to generate the report.")
@@ -74,33 +79,36 @@ async def get_report_data():
 
 
 async def main(preview=False):
+    pdf_path = None
     try:
         final_data = await get_report_data()
-
-        email_html = render_html_report(final_data, is_server_mode=False, is_pdf_mode=False)
-        pdf_html = render_html_report(final_data, is_server_mode=False, is_pdf_mode=True)
-
-        # Automatically export report as PDF
-        pdf_path = "output/azure_cost_report.pdf"
-        try:
-            logger.info(f"Generating PDF report at {pdf_path}...")
-            export_html_to_pdf(pdf_html, pdf_path)
-        except Exception as pdf_err:
-            logger.error(f"Failed to generate PDF report: {pdf_err}")
-            pdf_path = None
+        report_html = _renderer.render(final_data, mode=ReportMode.STATIC)
 
         if preview:
-            preview_email(email_html)
+            preview_email(report_html)
 
         if NOTIFY_METHOD in ["email", "both"]:
-            attachments = [pdf_path] if (pdf_path and os.path.exists(pdf_path)) else None
-            send_email_notification("Azure Cost Report", email_html, attachments=attachments)
+            pdf_path = _pdf_exporter.create_temp_path()
+            try:
+                logger.info(f"Generating PDF report at {pdf_path}...")
+                _pdf_exporter.export(report_html, pdf_path)
+                send_email_notification("Azure Cost Report", report_html, attachments=[pdf_path])
+            except Exception as pdf_err:
+                logger.error(f"Failed to generate PDF report: {pdf_err}")
+                raise RuntimeError(f"PDF generation failed: {pdf_err}") from pdf_err
 
         if NOTIFY_METHOD in ["webhook", "both"]:
             send_webhook_notification(final_data)
 
     except Exception as e:
         logger.exception(f"Error in main execution: {e}")
+        sys.exit(1)
+    finally:
+        if pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except OSError as cleanup_err:
+                logger.warning(f"Failed to remove temp PDF {pdf_path}: {cleanup_err}")
 
 
 def run():

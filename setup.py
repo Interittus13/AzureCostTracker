@@ -7,10 +7,19 @@ setup(
     author_email="",
     url="https://github.com/Interittus13/AzureCostTracker",
     description="A Python tool for tracking Azure subscription costs, generating reports, and sending automated email notifications.",
-    packages=['src', 'src.services', 'src.utils'],
-    package_data={'': ['../templates/*.html']},
-    include_package_data = True,
-    install_requires=["jinja2", "requests", "python-dotenv", "cryptography"],
+    packages=['src', 'src.services', 'src.services.report', 'src.utils'],
+    package_data={'': ['../templates/*.html', '../templates/components/*.html']},
+    include_package_data=True,
+    install_requires=[
+        "jinja2",
+        "requests",
+        "python-dotenv",
+        "cryptography",
+        "weasyprint",
+        "fastapi",
+        "uvicorn",
+        "httpx",
+    ],
     entry_points="""
         [console_scripts]
         azure-cost-tracker=src.main:run

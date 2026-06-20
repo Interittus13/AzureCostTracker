@@ -1,5 +1,5 @@
     <!-- Web Dashboard Interactive Scripts -->
-    {% if is_server_mode %}
+    {% if is_interactive %}
     <script>
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
@@ -57,51 +57,5 @@
                 showToast('Error: ' + err.message, true);
             }
         }
-
-        // Render Chart.js doughnut widgets
-        document.addEventListener('DOMContentLoaded', function() {
-            {% for entry in subscriptions %}
-                {% if entry.service_breakdown %}
-                const ctx{{ loop.index0 }} = document.getElementById('doughnut-{{ loop.index0 }}').getContext('2d');
-                new Chart(ctx{{ loop.index0 }}, {
-                    type: 'doughnut',
-                    data: {
-                        labels: [
-                            {% for item in entry.service_breakdown %}
-                            '{{ item.service }}',
-                            {% endfor %}
-                        ],
-                        datasets: [{
-                            data: [
-                                {% for item in entry.service_breakdown %}
-                                {{ item.raw_cost | float }},
-                                {% endfor %}
-                            ],
-                            backgroundColor: [
-                                '#3b82f6',
-                                '#8b5cf6',
-                                '#ec4899',
-                                '#f59e0b',
-                                '#10b981',
-                                '#6b7280'
-                            ],
-                            borderWidth: 1,
-                            borderColor: '#ffffff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        cutout: '60%'
-                    }
-                });
-                {% endif %}
-            {% endfor %}
-        });
     </script>
     {% endif %}

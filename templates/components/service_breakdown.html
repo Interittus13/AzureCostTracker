@@ -1,119 +1,46 @@
+{% from 'components/macros.html' import chart_color, service_bar %}
         <!-- SERVICE BREAKDOWN DETAILS -->
         <div class="section">
-            <h2>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>
-                </svg>
-                Service-Level Cost Breakdown (Month-to-Date)
-            </h2>
-            <div class="service-breakdown-container">
+            <h2>Service-Level Cost Breakdown (Month-to-Date)</h2>
+            <div class="service-breakdown-container" style="font-size: 0;">
                 {% for entry in subscriptions %}
-                <div class="sub-breakdown-card">
+                <div class="sub-breakdown-card" style="font-size: 14px;">
                     <h3>{{ entry.get('subscription_name', 'Unknown') }}</h3>
-                    
-                    <div class="sub-breakdown-content">
-                        {% if (is_server_mode or is_pdf_mode) and entry.service_breakdown %}
-                        <div class="sub-breakdown-chart-column">
-                            {% if is_server_mode %}
-                            <!-- Dynamic Doughnut Chart for Server Mode -->
-                            <div class="chart-wrapper" style="position: relative; height: 160px; width: 160px;">
-                                <canvas id="doughnut-{{ loop.index0 }}"></canvas>
-                            </div>
-                            {% endif %}
 
-                            {% if is_pdf_mode %}
-                            <!-- SVG Doughnut Chart for PDF Mode -->
-                            <div style="text-align: center;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 42 42" style="display: inline-block;">
-                                    <!-- Rotate only the circles group around center (21, 21) -->
-                                    <g transform="rotate(-90 21 21)">
-                                        <!-- Hole and background ring -->
-                                        <circle cx="21" cy="21" r="15.91549430918954" fill="#ffffff"></circle>
-                                        <circle cx="21" cy="21" r="15.91549430918954" fill="none" stroke="#f1f5f9" stroke-width="5"></circle>
-                                        
-                                        {% set total_mtd = entry.get('month_to_day', 0.0) | float %}
-                                        {% set ns = namespace(offset=0) %}
-                                        {% for item in entry.service_breakdown %}
-                                            {% set item_cost = item.raw_cost | float %}
-                                            {% set percentage = (item_cost / total_mtd * 100) | round(1) if total_mtd > 0 else 0 %}
-                                            {% if percentage > 0 %}
-                                                {% set color_hexes = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#6b7280'] %}
-                                                {% set color = color_hexes[loop.index0 % 6] %}
-                                                <circle cx="21" cy="21" r="15.91549430918954" fill="none" stroke="{{ color }}" stroke-width="5" 
-                                                        stroke-dasharray="{{ percentage }} {{ 100 - percentage }}" 
-                                                        stroke-dashoffset="-{{ ns.offset }}"></circle>
-                                                {% set ns.offset = ns.offset + percentage %}
-                                            {% endif %}
-                                        {% endfor %}
-                                    </g>
-                                    
-                                    <!-- Central Label (no rotation needed as it's outside the rotated group) -->
-                                    <text x="21" y="21" text-anchor="middle" font-family="'Outfit', sans-serif" font-weight="700" font-size="5" fill="#0078D4">{{ currency_symbol }}</text>
-                                    <text x="21" y="26" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="500" font-size="3" fill="#6b7280">MTD</text>
-                                </svg>
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                        
-                        <div class="sub-breakdown-list-column">
-                            {% if entry.service_breakdown %}
-                                {% set total_mtd = entry.get('month_to_day', 0.0) | float %}
+                    {% if entry.service_breakdown %}
+                        {% set total_mtd = entry.get('month_to_day', 0.0) | float %}
+                        <table style="width: 100%; font-size: 13px; border-collapse: collapse; border: none; background: transparent;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid #e5e7eb; background: transparent;">
+                                    <th style="padding: 6px 8px; font-size: 10px; font-weight: 600; text-transform: uppercase; color: #9ca3af; text-align: left; border: none;">Service</th>
+                                    <th style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: 600; text-transform: uppercase; color: #9ca3af; border: none;">Cost</th>
+                                    <th style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: 600; text-transform: uppercase; color: #9ca3af; border: none;">% MTD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 {% for item in entry.service_breakdown %}
-                                    {% set item_cost = item.raw_cost | float %}
-                                    {% set percentage = (item_cost / total_mtd * 100) | round(1) if total_mtd > 0 else 0 %}
-                                    
-                                    {% if not is_server_mode %}
-                                    <!-- Static Progress Bars for Email Mode -->
-                                    {% set color_class = "bg-color-" ~ (loop.index0 % 6) %}
-                                    <div class="breakdown-row">
-                                        <table style="width: 100%; border-collapse: collapse; margin: 0 0 4px 0; border: none; background: transparent;">
-                                            <tr style="background: transparent; border: none;">
-                                                <td style="padding: 0; text-align: left; font-size: 13px; font-weight: 500; color: #1f2937; border: none; background: transparent;">{{ item.service }}</td>
-                                                <td style="padding: 0; text-align: right; font-size: 13px; font-weight: 600; color: #4b5563; border: none; background: transparent;">{{ item.cost }} ({{ percentage }}%)</td>
-                                            </tr>
-                                        </table>
-                                        <div class="progress-container">
-                                            <div class="progress-bar {{ color_class }}" style="width: {{ percentage }}%;"></div>
-                                        </div>
-                                    </div>
-                                    {% endif %}
+                                {% set item_cost = item.raw_cost | float %}
+                                {% set percentage = (item_cost / total_mtd * 100) | round(1) if total_mtd > 0 else 0 %}
+                                {% set color = chart_color(loop.index0) %}
+                                <tr style="border: none; background: transparent;">
+                                    <td style="padding: 8px 8px 4px; white-space: nowrap; border: none;">
+                                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: {{ color }}; margin-right: 8px; vertical-align: middle;"></span>
+                                        <span style="vertical-align: middle; color: #1f2937; font-weight: 500;">{{ item.service }}</span>
+                                    </td>
+                                    <td style="padding: 8px 8px 4px; text-align: right; font-weight: 600; color: #1f2937; border: none;">{{ item.cost }}</td>
+                                    <td style="padding: 8px 8px 4px; text-align: right; color: #4b5563; border: none;">{{ percentage }}%</td>
+                                </tr>
+                                <tr style="border: none; background: transparent;">
+                                    <td colspan="3" style="padding: 0 8px 12px; border: none; background: transparent;">
+                                        {{ service_bar(percentage, color) }}
+                                    </td>
+                                </tr>
                                 {% endfor %}
-                                
-                                {% if is_server_mode %}
-                                <!-- Interactive Data Table breakdown for Server Mode -->
-                                <table style="width: 100%; font-size: 13px;">
-                                    <thead>
-                                        <tr>
-                                            <th style="padding: 6px 8px; font-size: 10px;">Service</th>
-                                            <th style="padding: 6px 8px; text-align: right; font-size: 10px;">Cost</th>
-                                            <th style="padding: 6px 8px; text-align: right; font-size: 10px;">% MTD</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for item in entry.service_breakdown %}
-                                        {% set item_cost = item.raw_cost | float %}
-                                        {% set percentage = (item_cost / total_mtd * 100) | round(1) if total_mtd > 0 else 0 %}
-                                        <tr>
-                                            <td style="padding: 6px 8px; white-space: nowrap;">
-                                                {% set color_hexes = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#6b7280'] %}
-                                                {% set color = color_hexes[loop.index0 % 6] %}
-                                                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: {{ color }}; margin-right: 8px; vertical-align: middle;"></span>
-                                                <span style="vertical-align: middle;">{{ item.service }}</span>
-                                            </td>
-                                            <td style="padding: 6px 8px; text-align: right; font-weight: 600;">{{ item.cost }}</td>
-                                            <td style="padding: 6px 8px; text-align: right; color: #4b5563;">{{ percentage }}%</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                                {% endif %}
-                                
-                            {% else %}
-                                <p style="color: #9ca3af; font-style: italic; font-size: 13px;">No service breakdown details returned.</p>
-                            {% endif %}
-                        </div>
-                    </div>
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p style="color: #9ca3af; font-style: italic; font-size: 13px;">No service breakdown details returned.</p>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>

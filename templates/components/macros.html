@@ -1,0 +1,16 @@
+{% macro chart_color(index) -%}
+{{ chart_colors[index % chart_colors|length] }}
+{%- endmacro %}
+
+{% macro service_bar(percentage, color) %}
+<table role="presentation" style="width: 100%; border-collapse: collapse; border: none; margin: 0; padding: 0; background: transparent;">
+    <tr style="border: none; background: transparent;">
+        {% if percentage > 0 %}
+        <td style="width: {{ percentage }}%; height: 8px; padding: 0; margin: 0; border: none; background-color: {{ color }}; font-size: 0; line-height: 0;">&nbsp;</td>
+        {% endif %}
+        {% if percentage < 100 %}
+        <td style="width: {{ 100 - percentage }}%; height: 8px; padding: 0; margin: 0; border: none; background-color: #e2e8f0; font-size: 0; line-height: 0;">&nbsp;</td>
+        {% endif %}
+    </tr>
+</table>
+{% endmacro %}

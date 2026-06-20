@@ -22,7 +22,7 @@ raw_subs = os.getenv("SUBSCRIPTION_IDS", "mock-sub-1,mock-sub-2")
 if is_placeholder(raw_subs) or not raw_subs.strip():
     raw_subs = "mock-subscription-development,mock-subscription-production"
 
-SUBSCRIPTIONS = set(sub.strip() for sub in raw_subs.split(",") if sub.strip())
+SUBSCRIPTIONS = [sub.strip() for sub in raw_subs.split(",") if sub.strip()]
 
 NOTIFY_METHOD = os.getenv("NOTIFY_METHOD", "email")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
