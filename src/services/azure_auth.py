@@ -3,13 +3,17 @@ import json
 from src.utils.logger import logger
 import requests, os
 from cryptography.fernet import Fernet
-from src.config import CLIENT_ID, CLIENT_SECRET, BASE_URL, AUTH_URL
+from src.config import CLIENT_ID, CLIENT_SECRET, BASE_URL, AUTH_URL, MOCK_AZURE
 
 TOKEN_FILE = "token.enc"
 KEY_FILE = "secret.key"
 
 def get_access_token():
     """Retrive Azure access token (Generate new if expired)."""
+    if MOCK_AZURE:
+        logger.info("Using Mock Azure Authentication.")
+        return "mock-access-token-12345"
+
     token = decrypt_token()
 
     if token and not is_token_expired(token['expires_on']):

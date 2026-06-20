@@ -1,0 +1,29 @@
+        <!-- HEADER -->
+        <div class="header">
+            <table style="width: 100%; border-collapse: collapse; border: none; background: transparent; margin: 0;">
+                <tr style="background: transparent; border: none;">
+                    <td style="padding: 0; text-align: left; border: none; background: transparent; vertical-align: middle;">
+                        <h1 style="font-family: 'Outfit', sans-serif; margin: 0; font-size: 28px; font-weight: 600; color: #ffffff; line-height: 34px;">
+                            <span style="display: inline-block; vertical-align: middle; text-align: center; line-height: 34px; background: rgba(255, 255, 255, 0.2); width: 34px; height: 34px; border-radius: 50%; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; margin-right: 8px;">{{ currency_symbol }}</span>
+                            <span style="vertical-align: middle;">Azure Cost Report</span>
+                        </h1>
+                    </td>
+                    <td style="padding: 0; text-align: right; border: none; background: transparent; vertical-align: middle;">
+                        <span class="badge" style="background: rgba(255, 255, 255, 0.2); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; color: #ffffff;">Active Subscriptions: {{ subscriptions | length }}</span>
+                    </td>
+                </tr>
+            </table>
+            
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.15);">
+                <table style="width: 100%; border-collapse: collapse; border: none; background: transparent; margin: 0;">
+                    <tr style="background: transparent; border: none;">
+                        <td style="padding: 0; text-align: left; border: none; background: transparent; font-size: 14px; color: rgba(255, 255, 255, 0.85);">
+                            <strong>Billing Reference Period:</strong> {{ report_for }}
+                        </td>
+                        <td style="padding: 0; text-align: right; border: none; background: transparent; font-size: 14px; color: rgba(255, 255, 255, 0.85);">
+                            <strong>Generated On:</strong> {{ report_generated_on }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>

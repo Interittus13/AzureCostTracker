@@ -2,6 +2,27 @@ from datetime import datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from src.services.azure_billing import get_billing_period
 
+CURRENCY_SYMBOLS = {
+    "USD": "$",
+    "CAD": "$",
+    "AUD": "$",
+    "NZD": "$",
+    "EUR": "€",
+    "GBP": "£",
+    "INR": "₹",
+    "JPY": "¥",
+    "CNY": "¥",
+    "KRW": "₩",
+    "SGD": "S$",
+    "HKD": "HK$",
+}
+
+def get_currency_symbol(currency_code):
+    if not currency_code:
+        return "$"
+    code_upper = currency_code.upper()
+    return CURRENCY_SYMBOLS.get(code_upper, f"{code_upper} ")
+
 def format_currency(value, currency_symbol="$"):
     """
     Format a number into a currency format with commas and two decimal places.
@@ -51,9 +72,10 @@ async def get_forecast_month_date(subscription_id: str):
 
 def calculate_cost(data):
     total_cost = sum(
-        Decimal(str(item[0]))
+        (Decimal(str(item[0]))
         for item in data.get("properties", {}).get("rows", [])
-        if isinstance(item[0], (int, float))
+        if isinstance(item[0], (int, float))),
+        Decimal('0.0')
     )
     return total_cost.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
@@ -63,6 +85,15 @@ def get_cost_breakdown(cost_data):
     total_cost = 0.0
 
     rows = cost_data.get("properties", {}).get("rows", [])
+    
+    # Try to find the currency code from rows, default to "USD"
+    currency_code = "USD"
+    for item in rows:
+        if len(item) >= 4 and item[3]:
+            currency_code = item[3]
+            break
+            
+    currency_symbol = get_currency_symbol(currency_code)
     sorted_rows = sorted(rows, key=lambda x: float(x[0]), reverse=True)
 
     for item in sorted_rows:
@@ -76,9 +107,10 @@ def get_cost_breakdown(cost_data):
         breakdown.append(
             {
                 "service": service_name,
-                "cost": format_currency(cost),
+                "cost": format_currency(cost, currency_symbol),
+                "raw_cost": float(cost) if isinstance(cost, (int, float)) else 0.0,
                 "currency": currency,
             }
         )
 
-    return breakdown, format_currency(total_cost)
+    return breakdown, format_currency(total_cost, currency_symbol)

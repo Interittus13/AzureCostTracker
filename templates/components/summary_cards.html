@@ -1,0 +1,13 @@
+        <!-- TOTALS CARDS -->
+        <div class="summary-cards">
+            {% for key in cost_keys %}
+            <div class="card">
+                <div class="card-title">{{ key.replace('_', ' ') }}</div>
+                <div class="card-body">
+                    {% set val = subscriptions | map(attribute=key) | sum %}
+                    {{ currency_symbol }}{{ "{:,.2f}".format(val) }}
+                </div>
+                <div class="card-footer">{{ currency_code }} Aggregate</div>
+            </div>
+            {% endfor %}
+        </div>

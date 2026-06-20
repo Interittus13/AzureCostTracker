@@ -1,11 +1,18 @@
 import requests
-from config import BASE_URL
+from src.config import BASE_URL, MOCK_AZURE
 from src.services.azure_auth import get_access_token
 from src.utils.logger import logger
 
 
 def get_billing_period(subscription_id):
     """Fetch the billing period from Azure API for a specific subscription."""
+    if MOCK_AZURE:
+        from datetime import datetime
+        today = datetime.now()
+        start_date = f"{today.year}-{today.month:02d}-01"
+        end_date = f"{today.year}-{today.month:02d}-30"
+        return start_date, end_date
+
     access_token = get_access_token()
 
     url = f"{BASE_URL}/subscriptions/{subscription_id}/providers/Microsoft.Billing/billingPeriods?api-version=2018-03-01-preview"

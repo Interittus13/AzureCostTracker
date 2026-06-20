@@ -1,0 +1,107 @@
+    <!-- Web Dashboard Interactive Scripts -->
+    {% if is_server_mode %}
+    <script>
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        async function triggerEmail() {
+            showToast('Triggering email report in background...');
+            try {
+                const res = await fetch('/api/notify/email', { method: 'POST' });
+                const resData = await res.json();
+                if (res.ok) {
+                    showToast('Email report successfully dispatched!');
+                } else {
+                    showToast('Error: ' + (resData.detail || 'Failed to dispatch email'), true);
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, true);
+            }
+        }
+
+        async function triggerWebhook() {
+            showToast('Triggering webhook notification...');
+            try {
+                const res = await fetch('/api/notify/webhook', { method: 'POST' });
+                const resData = await res.json();
+                if (res.ok) {
+                    showToast('Webhook Markdown report dispatched!');
+                } else {
+                    showToast('Error: ' + (resData.detail || 'Failed to dispatch webhook'), true);
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, true);
+            }
+        }
+
+        async function refreshData() {
+            showToast('Refetching cost data from Azure...');
+            try {
+                const res = await fetch('/api/refresh', { method: 'POST' });
+                const resData = await res.json();
+                if (res.ok) {
+                    showToast('Data refreshed successfully! Reloading...');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast('Error: ' + (resData.detail || 'Failed to refresh data'), true);
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, true);
+            }
+        }
+
+        // Render Chart.js doughnut widgets
+        document.addEventListener('DOMContentLoaded', function() {
+            {% for entry in subscriptions %}
+                {% if entry.service_breakdown %}
+                const ctx{{ loop.index0 }} = document.getElementById('doughnut-{{ loop.index0 }}').getContext('2d');
+                new Chart(ctx{{ loop.index0 }}, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [
+                            {% for item in entry.service_breakdown %}
+                            '{{ item.service }}',
+                            {% endfor %}
+                        ],
+                        datasets: [{
+                            data: [
+                                {% for item in entry.service_breakdown %}
+                                {{ item.raw_cost | float }},
+                                {% endfor %}
+                            ],
+                            backgroundColor: [
+                                '#3b82f6',
+                                '#8b5cf6',
+                                '#ec4899',
+                                '#f59e0b',
+                                '#10b981',
+                                '#6b7280'
+                            ],
+                            borderWidth: 1,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        cutout: '60%'
+                    }
+                });
+                {% endif %}
+            {% endfor %}
+        });
+    </script>
+    {% endif %}

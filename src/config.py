@@ -11,7 +11,18 @@ def str_to_bool(value):
 TENANT_ID = os.getenv("TENANT_ID")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-SUBSCRIPTIONS = set(os.getenv("SUBSCRIPTION_IDS").split(","))
+
+# Check if credentials are placeholders or missing
+def is_placeholder(val):
+    return not val or any(placeholder in str(val).lower() for placeholder in ["your-", "placeholder", "subscription-id", "client-secret"])
+
+MOCK_AZURE = str_to_bool(os.getenv("MOCK_AZURE", "false")) or is_placeholder(TENANT_ID) or is_placeholder(CLIENT_SECRET)
+
+raw_subs = os.getenv("SUBSCRIPTION_IDS", "mock-sub-1,mock-sub-2")
+if is_placeholder(raw_subs) or not raw_subs.strip():
+    raw_subs = "mock-subscription-development,mock-subscription-production"
+
+SUBSCRIPTIONS = set(sub.strip() for sub in raw_subs.split(",") if sub.strip())
 
 NOTIFY_METHOD = os.getenv("NOTIFY_METHOD", "email")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
