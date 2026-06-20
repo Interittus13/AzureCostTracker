@@ -1,5 +1,7 @@
+import asyncio
 from datetime import datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
+
 from src.services.azure_billing import get_billing_period
 
 CURRENCY_SYMBOLS = {
@@ -17,20 +19,15 @@ CURRENCY_SYMBOLS = {
     "HKD": "HK$",
 }
 
+
 def get_currency_symbol(currency_code):
     if not currency_code:
         return "$"
     code_upper = currency_code.upper()
     return CURRENCY_SYMBOLS.get(code_upper, f"{code_upper} ")
 
-def format_currency(value, currency_symbol="$"):
-    """
-    Format a number into a currency format with commas and two decimal places.
 
-    Example:
-    - 1425.20 -> "$1,425.20"
-    - 98543.5 -> "$98,543.50"
-    """
+def format_currency(value, currency_symbol="$"):
     try:
         value = float(value)
         formatted_value = f"{value:,.2f}"
@@ -39,32 +36,41 @@ def format_currency(value, currency_symbol="$"):
         return value
 
 
-async def get_forecast_month_date(subscription_id: str):
-    """
-    Fetch the billing start day and adjust it for the current month.
-
-    :param subscription_id: Azure Subscription ID
-    :return: Tuple containing (first_day, last_day)
-    """
+async def get_forecast_month_date(subscription_id: str, access_token=None):
+    """Fetch billing boundaries and return report date ranges."""
     today = datetime.now()
-    yesterday = today - timedelta(days=2) # today - 2 for fetching daily cost
+    yesterday = today - timedelta(days=2)
 
-    last_billing_start_day, _ = get_billing_period(subscription_id)
+    loop = asyncio.get_running_loop()
+    last_billing_start_day, _ = await loop.run_in_executor(
+        None, get_billing_period, subscription_id, access_token
+    )
 
-    # If API returns None, assume billing starts on 1st of month
-    start_day = datetime.strptime(last_billing_start_day, "%Y-%m-%d").day if last_billing_start_day else 1
+    start_day = (
+        datetime.strptime(last_billing_start_day, "%Y-%m-%d").day
+        if last_billing_start_day
+        else 1
+    )
 
-    month_starts_on = today.replace(day=start_day) if today.day >= start_day else (today - timedelta(days=today.day)).replace(day=start_day)
+    month_starts_on = (
+        today.replace(day=start_day)
+        if today.day >= start_day
+        else (today - timedelta(days=today.day)).replace(day=start_day)
+    )
     month_ends_on = (month_starts_on + timedelta(days=32)).replace(day=start_day) - timedelta(days=1)
 
-    year_starts_on = datetime(today.year, 1, start_day) if today >= datetime(today.year, 1, start_day) else datetime(today.year - 1, 1, start_day)
+    year_starts_on = (
+        datetime(today.year, 1, start_day)
+        if today >= datetime(today.year, 1, start_day)
+        else datetime(today.year - 1, 1, start_day)
+    )
     year_ends_on = datetime(year_starts_on.year + 1, 1, start_day) - timedelta(days=1)
 
     return {
-        "today": today.strftime('%Y-%m-%d'),
-        "yesterday": yesterday.strftime('%Y-%m-%d'),
-        "month_starts_on": month_starts_on.strftime('%Y-%m-%d'),
-        "month_ends_on": month_ends_on.strftime('%Y-%m-%d'),
+        "today": today.strftime("%Y-%m-%d"),
+        "yesterday": yesterday.strftime("%Y-%m-%d"),
+        "month_starts_on": month_starts_on.strftime("%Y-%m-%d"),
+        "month_ends_on": month_ends_on.strftime("%Y-%m-%d"),
         "year_starts_on": year_starts_on.strftime("%Y-%m-%d"),
         "year_ends_on": year_ends_on.strftime("%Y-%m-%d"),
     }
@@ -72,12 +78,14 @@ async def get_forecast_month_date(subscription_id: str):
 
 def calculate_cost(data):
     total_cost = sum(
-        (Decimal(str(item[0]))
-        for item in data.get("properties", {}).get("rows", [])
-        if isinstance(item[0], (int, float))),
-        Decimal('0.0')
+        (
+            Decimal(str(item[0]))
+            for item in data.get("properties", {}).get("rows", [])
+            if isinstance(item[0], (int, float))
+        ),
+        Decimal("0.0"),
     )
-    return total_cost.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    return total_cost.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def get_cost_breakdown(cost_data):
@@ -85,19 +93,17 @@ def get_cost_breakdown(cost_data):
     total_cost = 0.0
 
     rows = cost_data.get("properties", {}).get("rows", [])
-    
-    # Try to find the currency code from rows, default to "USD"
+
     currency_code = "USD"
     for item in rows:
         if len(item) >= 4 and item[3]:
             currency_code = item[3]
             break
-            
+
     currency_symbol = get_currency_symbol(currency_code)
     sorted_rows = sorted(rows, key=lambda x: float(x[0]), reverse=True)
 
     for item in sorted_rows:
-        # Ensure proper unpacking and handle missing service names
         if len(item) < 4:
             continue
 

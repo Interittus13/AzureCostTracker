@@ -31,8 +31,10 @@ azure-cost-tracker/
 │   ├── config.py                      # .env configuration and subscription list
 │   ├── services/
 │   │   ├── azure_auth.py              # Access token (includes mock mode)
-│   │   ├── azure_billing.py           # Billing period / date helpers
-│   │   ├── azure_cost.py              # Cost API queries (daily, MTD, YTD, forecast)
+│   │   ├── azure_billing.py           # Billing period cache and date helpers
+│   │   ├── azure_cost.py              # Throttled Cost Management API client
+│   │   ├── azure_cost_scope.py        # Management Group scoped queries (optional)
+│   │   ├── cost_aggregator.py         # Derive MTD/YTD/breakdown from Daily rows
 │   │   ├── email_service.py           # SMTP HTML email with attachments
 │   │   ├── html_renderer.py           # Backward-compatible render/PDF wrappers
 │   │   ├── webhook_service.py         # Markdown webhook notifications
@@ -60,7 +62,9 @@ azure-cost-tracker/
 │   ├── test_act_utils.py
 │   ├── test_services.py
 │   ├── test_report_renderer.py
-│   └── test_e2e_regression.py
+│   ├── test_e2e_regression.py
+│   ├── test_cost_aggregator.py
+│   └── test_rate_limit.py
 │── output/                            # Previews and temp PDFs (git ignored)
 │── .env
 │── requirement.txt
@@ -109,7 +113,36 @@ SMTP_PASS=your-smtp-password
 WEBHOOK_URL=https://your-teams-webhook-url
 NOTIFY_METHOD=email  # Options: email, webhook, both
 MOCK_AZURE=true       # Set to true for local dev without Azure credentials
+
+# Rate limiting (optional — reduces Azure 429 errors)
+COST_API_MAX_CONCURRENT=1
+COST_API_MIN_INTERVAL_SEC=2
+BILLING_START_DAY=1   # Skip Billing API; use calendar month starting on this day
+
+# Management Group scope (optional Phase 2 — 2 API calls for all subscriptions)
+# COST_SCOPE=managementGroup
+# MANAGEMENT_GROUP_ID=your-management-group-id
 ```
+
+---
+
+## ⚡ Rate Limiting & Troubleshooting
+
+Azure Cost Management returns **HTTP 429** when too many queries run in parallel. ACT reduces burst traffic by:
+
+1. **Consolidated queries** — two Cost API calls per subscription (one Daily actual query for the full year, one forecast query) instead of five.
+2. **Sequential subscriptions** — subscriptions are processed one at a time by default.
+3. **Global throttling** — `COST_API_MAX_CONCURRENT` and optional `COST_API_MIN_INTERVAL_SEC` gate every cost API request.
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `COST_API_MAX_CONCURRENT` | `1` | Max simultaneous Cost Management API requests |
+| `COST_API_MIN_INTERVAL_SEC` | `0` | Minimum seconds between requests (e.g. `2`) |
+| `BILLING_START_DAY` | *(unset)* | Fixed billing start day; skips Billing API when set |
+| `COST_SCOPE` | `subscription` | Set to `managementGroup` for MG-scoped queries |
+| `MANAGEMENT_GROUP_ID` | *(unset)* | Required when `COST_SCOPE=managementGroup` |
+
+**If you still see 429 retries:** increase `COST_API_MIN_INTERVAL_SEC`, keep `COST_API_MAX_CONCURRENT=1`, and avoid rapid dashboard **Refresh** clicks. For 10+ subscriptions with MG-level RBAC, enable `COST_SCOPE=managementGroup`.
 
 ---
 
