@@ -1,0 +1,61 @@
+    <!-- Web Dashboard Interactive Scripts -->
+    {% if is_interactive %}
+    <script>
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        async function triggerEmail() {
+            showToast('Triggering email report in background...');
+            try {
+                const res = await fetch('/api/notify/email', { method: 'POST' });
+                const resData = await res.json();
+                if (res.ok) {
+                    showToast('Email report successfully dispatched!');
+                } else {
+                    showToast('Error: ' + (resData.detail || 'Failed to dispatch email'), true);
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, true);
+            }
+        }
+
+        async function triggerWebhook() {
+            showToast('Triggering webhook notification...');
+            try {
+                const res = await fetch('/api/notify/webhook', { method: 'POST' });
+                const resData = await res.json();
+                if (res.ok) {
+                    showToast('Webhook Markdown report dispatched!');
+                } else {
+                    showToast('Error: ' + (resData.detail || 'Failed to dispatch webhook'), true);
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, true);
+            }
+        }
+
+        async function refreshData() {
+            showToast('Refetching cost data from Azure...');
+            try {
+                const res = await fetch('/api/refresh', { method: 'POST' });
+                const resData = await res.json();
+                if (res.ok) {
+                    showToast('Data refreshed successfully! Reloading...');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast('Error: ' + (resData.detail || 'Failed to refresh data'), true);
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, true);
+            }
+        }
+    </script>
+    {% endif %}

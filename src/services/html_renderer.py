@@ -1,6 +1,12 @@
 import os
 import webbrowser
-from jinja2 import Environment, FileSystemLoader
+
+from src.services.report.modes import ReportMode
+from src.services.report.pdf_exporter import PdfExporter
+from src.services.report.renderer import ReportRenderer
+
+_renderer = ReportRenderer()
+
 
 def preview_email(html, filename="preview.html"):
     output_dir = "output"
@@ -13,16 +19,25 @@ def preview_email(html, filename="preview.html"):
 
     webbrowser.open(temp_file)
 
-def render_html_report(subscription_data):
+
+def render_html_report(subscription_data, is_server_mode=False, is_pdf_mode=False):
     """
     Renders the HTML report using Jinja2.
 
-    :param subscription_data: List of subscription cost data
-    :return: Rendered HTML report as a string
+    Backward-compatible shim. Prefer ReportRenderer.render() with ReportMode.
     """
-    TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "../../templates")
-    env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
+    if is_server_mode:
+        mode = ReportMode.INTERACTIVE
+    else:
+        mode = ReportMode.STATIC
+    return _renderer.render(subscription_data, mode=mode)
 
-    template = env.get_template("report_template.html")
 
-    return template.render(subscription_data)
+def export_html_to_pdf(html_content, output_path):
+    """Compiles HTML content into a PDF using WeasyPrint."""
+    PdfExporter().export(html_content, output_path)
+
+
+def generate_pdf_report(data, pdf_path):
+    """Renders a static report and exports it to PDF."""
+    _renderer.render_pdf(data, pdf_path, mode=ReportMode.STATIC)

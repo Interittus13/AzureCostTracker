@@ -2,3 +2,7 @@ jinja2
 requests
 python-dotenv
 cryptography
+weasyprint
+fastapi
+uvicorn
+httpx

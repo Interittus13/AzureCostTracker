@@ -1,0 +1,65 @@
+        <!-- DETAILED SUBSCRIPTION COMPARISONS -->
+        {% set chunk_size = 3 %}
+        {% for i in range(0, cost_keys | length, chunk_size) %}
+        <div class="section">
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                {{ (cost_keys[i]).split('_')[0] | title }} Summary Comparison
+            </h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Subscription Name</th>
+                            {% for key in cost_keys[i:i+chunk_size] %}
+                            <th style="text-align: right;">{{ key.replace('_', ' ') }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in subscriptions %}
+                        <tr>
+                            <td style="font-weight: 500;">{{ entry.get('subscription_name', 'Unknown') }}</td>
+                            {% for key in cost_keys[i:i+chunk_size] %}
+                            <td style="text-align: right; font-weight: 600;">{{ currency_symbol }}{{ "{:,.2f}".format(entry.get(key, 0)) }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        <tr class="total-row">
+                            <td>Total</td>
+                            {% for key in cost_keys[i:i+chunk_size] %}
+                            <td style="text-align: right;">{{ currency_symbol }}{{ "{:,.2f}".format(subscriptions | map(attribute=key) | sum) }}</td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- PROGRESS COMPARISONS -->
+            <div class="visualize">
+                {% for key in cost_keys[i:i+chunk_size] %}
+                {% set total_cost = subscriptions | map(attribute=key) | sum %}
+                <div class="chart">
+                    <div class="chart-title">Share of {{ key.replace('_', ' ') }}</div>
+                    {% for entries in subscriptions %}
+                    {% set val = entries.get(key, 0) | float %}
+                    {% set percentage = (val / (total_cost | float) * 100) | round(1) if total_cost > 0 else 0 %}
+                    <div style="margin-bottom: 12px;">    
+                        <table style="width: 100%; border-collapse: collapse; margin: 0 0 4px 0; border: none; background: transparent;">
+                            <tr style="background: transparent; border: none;">
+                                <td style="padding: 0; text-align: left; font-size: 13px; font-weight: 500; color: #4b5563; border: none; background: transparent;">{{ entries.get('subscription_name', 'Unknown') }}</td>
+                                <td style="padding: 0; text-align: right; font-size: 13px; font-weight: 600; color: #1f2937; border: none; background: transparent;">{{ currency_symbol }}{{ "{:,.2f}".format(val) }} ({{ percentage }}%)</td>
+                            </tr>
+                        </table>
+                        <div class="bar-chart">
+                            <div class="bar" style="width:{{ percentage }}%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
