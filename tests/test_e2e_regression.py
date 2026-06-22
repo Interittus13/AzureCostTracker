@@ -16,6 +16,7 @@ from src.app import app, send_email_with_pdf_task
 from src.main import get_report_data, main
 from src.services.html_renderer import generate_pdf_report, render_html_report
 from src.services.report import PdfExporter, ReportMode, ReportRenderer
+from src.services.snapshot import SnapshotStore
 
 
 def _has_service_bars(html: str) -> bool:
@@ -92,11 +93,14 @@ def reset_app_cache():
 
 
 @pytest.fixture(autouse=True)
-def force_mock_azure():
+def force_mock_azure(tmp_path):
+    db_path = str(tmp_path / "snapshots.db")
     with patch("src.config.MOCK_AZURE", True), \
          patch("src.services.azure_auth.MOCK_AZURE", True), \
          patch("src.services.azure_cost.MOCK_AZURE", True), \
-         patch("src.services.azure_billing.MOCK_AZURE", True):
+         patch("src.services.azure_billing.MOCK_AZURE", True), \
+         patch("src.config.SNAPSHOT_DB_PATH", db_path), \
+         patch("src.config.SNAPSHOT_ENABLED", True):
         yield
 
 
@@ -106,6 +110,24 @@ class TestMockDataPipeline:
         assert names == sorted(names)
         assert len(names) >= 2
         assert mock_report_data["currency_code"] == "CAD"
+
+    def test_second_run_includes_diff_section(self, tmp_path):
+        db_path = str(tmp_path / "snapshots.db")
+        with patch("src.config.SNAPSHOT_DB_PATH", db_path), \
+             patch("src.config.SNAPSHOT_ENABLED", True), \
+             patch("src.main.SnapshotStore") as mock_store_cls:
+            store = SnapshotStore(db_path=db_path, enabled=True)
+            mock_store_cls.return_value = store
+
+            first = asyncio.run(get_report_data())
+            assert first["diff"]["has_previous"] is False
+
+            second = asyncio.run(get_report_data())
+            assert second["diff"]["has_previous"] is True
+
+            html = ReportRenderer().render(second, mode=ReportMode.STATIC)
+            assert "Since Last Report" in html
+            assert second["diff"]["narrative"] in html
 
     def test_static_and_interactive_share_core_content(self, mock_report_data):
         renderer = ReportRenderer()

@@ -22,6 +22,9 @@
     <div class="container">
         {% include 'components/control_bar.html' %}
         {% include 'components/header.html' %}
+        {% if diff and diff.has_previous %}
+        {% include 'components/diff_summary.html' %}
+        {% endif %}
         {% include 'components/summary_cards.html' %}
         {% include 'components/comparison_tables.html' %}
         {% include 'components/service_breakdown.html' %}

@@ -89,7 +89,11 @@ def test_get_report_data_sorts_subscriptions():
     from src.main import get_report_data
 
     with patch("src.main.get_access_token", return_value="token"), \
-         patch("src.main.process_subscription") as mock_process:
+         patch("src.main.process_subscription") as mock_process, \
+         patch("src.main.SnapshotStore") as mock_store_cls:
+        mock_store = mock_store_cls.return_value
+        mock_store.get_latest.return_value = None
+        mock_store.save.return_value = None
         mock_process.side_effect = [
             {"subscription_name": "Zeta", "dates": {}, "currency_code": "USD", "currency_symbol": "$"},
             {"subscription_name": "Alpha", "dates": {}, "currency_code": "USD", "currency_symbol": "$"},

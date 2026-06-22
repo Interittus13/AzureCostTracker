@@ -35,6 +35,7 @@ azure-cost-tracker/
 │   │   ├── azure_cost.py              # Throttled Cost Management API client
 │   │   ├── azure_cost_scope.py        # Management Group scoped queries (optional)
 │   │   ├── cost_aggregator.py         # Derive MTD/YTD/breakdown from Daily rows
+│   │   ├── snapshot/                  # Historical snapshot store + diff engine
 │   │   ├── email_service.py           # SMTP HTML email with attachments
 │   │   ├── html_renderer.py           # Backward-compatible render/PDF wrappers
 │   │   ├── webhook_service.py         # Markdown webhook notifications
@@ -64,7 +65,8 @@ azure-cost-tracker/
 │   ├── test_report_renderer.py
 │   ├── test_e2e_regression.py
 │   ├── test_cost_aggregator.py
-│   └── test_rate_limit.py
+│   ├── test_rate_limit.py
+│   └── test_snapshot.py
 │── output/                            # Previews and temp PDFs (git ignored)
 │── .env
 │── requirement.txt
@@ -122,7 +124,26 @@ BILLING_START_DAY=1   # Skip Billing API; use calendar month starting on this da
 # Management Group scope (optional Phase 2 — 2 API calls for all subscriptions)
 # COST_SCOPE=managementGroup
 # MANAGEMENT_GROUP_ID=your-management-group-id
+
+# Historical snapshots (period-over-period diff)
+SNAPSHOT_ENABLED=true
+SNAPSHOT_DB_PATH=data/snapshots.db
+SNAPSHOT_RETENTION_DAYS=90
 ```
+
+---
+
+## Historical Snapshots & Report Diff
+
+Each successful report run is saved to a local SQLite database. On the next run, ACT compares against the previous snapshot and adds a **Since Last Report** section at the top of the email, dashboard, and PDF — for example: *"Since last report: +$420 MTD (+8.2%), driven by Virtual Machines (+$310)."*
+
+| Variable | Default | Purpose |
+|----------|---------|-------|
+| `SNAPSHOT_ENABLED` | `true` | Persist snapshots and show diff section |
+| `SNAPSHOT_DB_PATH` | `data/snapshots.db` | SQLite database path |
+| `SNAPSHOT_RETENTION_DAYS` | `90` | Auto-purge snapshots older than N days |
+
+See [ROADMAP.md](ROADMAP.md) for upcoming Phase 1–3 milestones.
 
 ---
 

@@ -52,6 +52,11 @@ BILLING_START_DAY = _optional_int(os.getenv("BILLING_START_DAY"))
 COST_SCOPE = os.getenv("COST_SCOPE", "subscription").strip().lower()
 MANAGEMENT_GROUP_ID = os.getenv("MANAGEMENT_GROUP_ID")
 
+# Snapshot store
+SNAPSHOT_ENABLED = str_to_bool(os.getenv("SNAPSHOT_ENABLED", "true"))
+SNAPSHOT_DB_PATH = os.getenv("SNAPSHOT_DB_PATH", "data/snapshots.db")
+SNAPSHOT_RETENTION_DAYS = _optional_int(os.getenv("SNAPSHOT_RETENTION_DAYS")) or 90
+
 # Azure API Endpoints
 AUTH_URL = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/token"
 BASE_URL = "https://management.azure.com"

@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import os
 import sys
+from src.__version__ import __version__
 from src.config import COST_SCOPE, MANAGEMENT_GROUP_ID, NOTIFY_METHOD, SUBSCRIPTIONS
 from src.services.webhook_service import send_webhook_notification
 from src.services.email_service import send_email_notification
@@ -11,6 +12,7 @@ from src.services.azure_cost import get_subscription_name, get_cost_data
 from src.services.cost_aggregator import derive_forecast_metrics, derive_metrics_from_daily_rows
 from src.services.azure_cost_scope import get_management_group_report_entries
 from src.services.report import PdfExporter, ReportMode, ReportRenderer
+from src.services.snapshot import DiffEngine, SnapshotStore
 from src.services.html_renderer import preview_email
 from src.utils.logger import logger
 
@@ -92,6 +94,13 @@ async def get_report_data():
         "currency_code": subscription_data[0].get("currency_code", "USD"),
         "currency_symbol": subscription_data[0].get("currency_symbol", "$"),
     }
+
+    store = SnapshotStore()
+    previous_snapshot = store.get_latest()
+    previous_payload = previous_snapshot.payload if previous_snapshot else None
+    final_data["diff"] = DiffEngine.compute(final_data, previous_payload)
+    store.save(final_data)
+
     return final_data
 
 
@@ -130,6 +139,7 @@ async def main(preview=False):
 
 def run():
     parser = argparse.ArgumentParser(description="Azure Cost Tracker Utility")
+    parser.add_argument("--version", action="version", version=f"Azure Cost Tracker {__version__}")
     parser.add_argument("--server", action="store_true", help="Start the FastAPI interactive dashboard server")
     parser.add_argument("--preview", action="store_true", help="Generate report, write locally, and open in browser")
     args = parser.parse_args()
